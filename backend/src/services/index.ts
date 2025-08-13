@@ -1,6 +1,7 @@
-const { GoogleGenAI } = require("@google/genai");
+import { GoogleGenAI } from "@google/genai";
+import { GEMINI_AI_API_KEY } from "../config";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_AI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: GEMINI_AI_API_KEY });
 
 async function checkGeminiApi() {
   try {
@@ -9,11 +10,11 @@ async function checkGeminiApi() {
       contents: "Explain how AI works in a few words",
     });
   } catch (err) {
-    throw new Error(`Gemini API check failed: ${err.message}`);
+    throw err;
   }
 }
 
-async function generateDiagramAndDocs(schemaText) {
+async function generateDiagramAndDocs(schemaText: string) {
   // carefully craft the prompt to get consistent JSON output
   const model = `You are an assistant that converts database schemas or descriptions into a mermaid ER diagram and clear documentation. Output ONLY a JSON object with three fields: title, mermaid, documentation. The mermaid field must contain a \"erDiagram\" (mermaid ER) or a \"classDiagram\" suitable for visualizing tables and relations. The documentation should be markdown giving table descriptions, columns, types, PK/FK, and example queries.`;
 
@@ -25,7 +26,7 @@ async function generateDiagramAndDocs(schemaText) {
       { role: "model", parts: [{ text: model }] },
       { role: "user", parts: [{ text: user }] },
     ],
-    generationConfig: {
+    config: {
       temperature: 0.0,
       maxOutputTokens: 1500,
     },
@@ -34,20 +35,25 @@ async function generateDiagramAndDocs(schemaText) {
   const text = response?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!text) throw new Error("No response from GeminiAI");
 
-  // attempt to parse JSON. If the model returns fenced code blocks, strip them
+  // Remove possible code block markers and trim whitespace
   const cleaned = text.replace(/^```json\s*|```\s*$/g, "").trim();
+
   let parsed;
   try {
     parsed = JSON.parse(cleaned);
-  } catch (err) {
-    // fallback: try to extract JSON substring
-    const m = cleaned.match(/\{[\s\S]*\}/);
-    if (m) parsed = JSON.parse(m[0]);
-    else
-      throw new Error("Failed to parse JSON from OpenAI response: " + cleaned);
+  } catch {
+    // Fallback: extract JSON object from the string
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (match) {
+      parsed = JSON.parse(match[0]);
+    } else {
+      throw new Error(
+        "Failed to parse JSON from GeminiAI response:\n" + cleaned
+      );
+    }
   }
 
   return parsed;
 }
 
-module.exports = { checkGeminiApi, generateDiagramAndDocs };
+export { checkGeminiApi, generateDiagramAndDocs };
