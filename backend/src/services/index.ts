@@ -1,14 +1,10 @@
-import { GoogleGenAI } from "@google/genai";
-import { GEMINI_AI_API_KEY } from "../config";
-
-const ai = new GoogleGenAI({ apiKey: GEMINI_AI_API_KEY });
+import { chatModel } from "../utils/ai-models";
 
 async function checkGeminiApi() {
   try {
-    return ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: "Explain how AI works in a few words",
-    });
+    const model = chatModel();
+    const response = await model.invoke("Explain how AI works in a few words");
+    return response.content;
   } catch (err) {
     throw err;
   }
@@ -16,24 +12,39 @@ async function checkGeminiApi() {
 
 async function generateDiagramAndDocs(schemaText: string) {
   // carefully craft the prompt to get consistent JSON output
-  const model = `You are an assistant that converts database schemas or descriptions into a mermaid ER diagram and clear documentation. Output ONLY a JSON object with three fields: title, mermaid, documentation. The mermaid field must contain a \"erDiagram\" (mermaid ER) or a \"classDiagram\" suitable for visualizing tables and relations. The documentation should be markdown giving table descriptions, columns, types, PK/FK, and example queries.`;
+  const systemPrompt = `You are an assistant that converts database schemas or descriptions into a mermaid ER diagram and clear documentation. Output ONLY a JSON object with three fields: title, mermaid, documentation. The mermaid field must contain a \"erDiagram\" (mermaid ER) or a \"classDiagram\" suitable for visualizing tables and relations. The documentation should be markdown giving table descriptions, columns, types, PK/FK, and example queries.`;
 
-  const user = `Schema or description:\n\n${schemaText}\n\nReturn the JSON object only. No explanatory text.`;
+  const userPrompt = `Schema or description:\n\n${schemaText}\n\nReturn the JSON object only. No explanatory text.`;
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: [
-      { role: "model", parts: [{ text: model }] },
-      { role: "user", parts: [{ text: user }] },
-    ],
-    config: {
-      temperature: 0.0,
-      maxOutputTokens: 1500,
+  const model = chatModel();
+  const response = await model.invoke([
+    {
+      role: "system",
+      content: systemPrompt,
     },
-  });
+    {
+      role: "human",
+      content: userPrompt,
+    },
+  ]);
 
-  const text = response?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error("No response from GeminiAI");
+  let text: string;
+  if (!response.content) throw new Error("No response from Model");
+
+  if (typeof response.content === "string") {
+    text = response.content;
+  } else if (Array.isArray(response.content)) {
+    text = response.content
+      .map((c: any) => (typeof c === "string" ? c : c.text || ""))
+      .join("\n");
+  } else if (
+    typeof response.content === "object" &&
+    "text" in response.content
+  ) {
+    text = (response.content as any).text;
+  } else {
+    throw new Error("Unexpected response.content type");
+  }
 
   // Remove possible code block markers and trim whitespace
   const cleaned = text.replace(/^```json\s*|```\s*$/g, "").trim();

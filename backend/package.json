@@ -8,7 +8,9 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
-    "@google/genai": "^1.13.0",
+    "@langchain/core": "^0.3.70",
+    "@langchain/google-genai": "^0.2.16",
+    "@langchain/openai": "^0.6.7",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
