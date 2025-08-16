@@ -1,11 +1,15 @@
 import express from "express";
-import { checkGeminiApi, generateDiagramAndDocs } from "../services/index";
+import {
+  checkAIConnectionApi,
+  generateDiagramAndDocs,
+  listDatabases,
+} from "../services/index";
 
 const router = express.Router();
 
 router.get("/check-gemini-api", async (req, res) => {
   try {
-    const response = await checkGeminiApi();
+    const response = await checkAIConnectionApi();
     res.json(response);
   } catch (err) {
     if (err instanceof Error) {
@@ -16,13 +20,33 @@ router.get("/check-gemini-api", async (req, res) => {
   }
 });
 
-router.post("/generate-schema-doc", async (req, res) => {
+router.post("/list-databases", async (req, res) => {
   try {
-    const { schemaText } = req.body;
-    if (!schemaText)
-      return res.status(400).json({ error: "schemaText is required" });
+    if (!req.body || !req.body.client || !req.body.connection) {
+      return res.status(400).json({ error: "Invalid request body" });
+    }
 
-    const parsed = await generateDiagramAndDocs(schemaText);
+    const result = await listDatabases(req.body);
+
+    res.json({ message: "Databases retrieved successfully!", result });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      res.status(500).json({ error: err.message });
+    } else {
+      res.status(500).json({ error: "An unknown error occurred" });
+    }
+  }
+});
+
+router.get("/generate-schema-doc/:database", async (req, res) => {
+  try {
+    if (!req.params.database) {
+      return res.status(400).json({ error: "Invalid request body" });
+    }
+
+    const { database } = req.params;
+
+    const parsed = await generateDiagramAndDocs(database);
 
     res.json(parsed);
   } catch (err: unknown) {
