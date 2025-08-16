@@ -1,21 +1,17 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { OPENROUTER_API_KEY, OPENROUTER_BASE_URL, MODEL } from "../config";
 
-function chatModel(provider = process.env.LLM_PROVIDER || "openai") {
-  if (provider === "gemini") {
-    return new ChatGoogleGenerativeAI({
-      model: "gemini-2.5-flash",
-      maxOutputTokens: 2048,
-      temperature: 0.2,
-      apiKey: process.env.GOOGLE_API_KEY,
-    });
-  }
-  return new ChatOpenAI({
-    model: "gpt-4o-mini",
-    apiKey: process.env.OPENAI_API_KEY,
-    maxTokens: 2048,
-    temperature: 0.2,
-  });
-}
-
-export { chatModel };
+export const chatModel = new ChatOpenAI({
+  modelName: MODEL,
+  temperature: 0.8,
+  maxTokens: 300,
+  streaming: true,
+  apiKey: OPENROUTER_API_KEY,
+  configuration: {
+    baseURL: `${OPENROUTER_BASE_URL}/api/v1`,
+    defaultHeaders: {
+      "HTTP-Referer": "https://localhost:3000/",
+      "X-Title": "Langchain.js Testing",
+    },
+  },
+});
