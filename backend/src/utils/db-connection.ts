@@ -22,7 +22,9 @@ export function initializeDb(config: DbConfig) {
 
 export function getDbConnection(): Knex {
   if (!db) {
-    throw new Error("Database not initialized. Call initializeDb() first.");
+    throw new Error(
+      "Database connection expired. Please connect to the database."
+    );
   }
   return db;
 }

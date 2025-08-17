@@ -3,9 +3,7 @@ import { OPENROUTER_API_KEY, OPENROUTER_BASE_URL, MODEL } from "../config";
 
 export const chatModel = new ChatOpenAI({
   modelName: MODEL,
-  temperature: 0.8,
-  maxTokens: 300,
-  streaming: true,
+  temperature: 0.2,
   apiKey: OPENROUTER_API_KEY,
   configuration: {
     baseURL: `${OPENROUTER_BASE_URL}/api/v1`,

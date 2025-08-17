@@ -82,7 +82,15 @@ async function generateDiagramAndDocs(database: string) {
   }
 
   // carefully craft the prompt to get consistent JSON output
-  const systemPrompt = `You are an assistant that converts database schemas or descriptions into a mermaid ER diagram and clear documentation. Output ONLY a JSON object with three fields: title, mermaid, documentation. The mermaid field must contain a \"erDiagram\" (mermaid ER) or a \"classDiagram\" suitable for visualizing tables and relations. The documentation should be markdown giving table descriptions, columns, types, PK/FK, and example queries.`;
+  const systemPrompt = `You are an assistant that converts database schemas or descriptions into a mermaid ER diagram and clear documentation. Before processing, normalize data types by replacing any "decimal(10,2)" with just "decimal". 
+  Output ONLY a JSON object with three fields: 
+  - title 
+  - mermaid 
+  - documentation 
+
+  The mermaid field must contain an "erDiagram" (mermaid ER) or a "classDiagram" suitable for visualizing tables and relations. 
+  The documentation should be markdown giving table descriptions, columns, types, PK/FK, and example queries.
+  `;
 
   const userPrompt = `Schema or description:\n\n${dbSchema}\n\nReturn the JSON object only. No explanatory text.`;
 

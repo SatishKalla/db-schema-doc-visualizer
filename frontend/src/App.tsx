@@ -32,7 +32,6 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [databases, setDatabases] = useState<{ Database: string }[]>([]);
   const [diagram, setDiagram] = useState("");
-  const [docTitle, setDocTitle] = useState("");
   const [doc, setDoc] = useState("");
   const [selected, setSelected] = useState<string>("");
 
@@ -41,17 +40,31 @@ const App: React.FC = () => {
     if (storedDatabases) {
       setDatabases(JSON.parse(storedDatabases));
     }
-  }, []);
 
-  useEffect(() => {
+    const storedDatabase = localStorage.getItem("database");
+    if (storedDatabase) {
+      setSelected(storedDatabase);
+    }
+
     const storedDoc = localStorage.getItem("dbSchemaDoc");
     if (storedDoc) {
-      const { title, documentation, mermaid } = JSON.parse(storedDoc);
+      const { documentation, mermaid } = JSON.parse(storedDoc);
       setDiagram(mermaid);
-      setDocTitle(title);
       setDoc(documentation);
     }
   }, []);
+
+  useEffect(() => {
+    if (databases.length === 0) {
+      localStorage.removeItem("dbSchemaDoc");
+      localStorage.removeItem("databases");
+      localStorage.removeItem("database");
+
+      setDiagram("");
+      setDoc("");
+      setSelected("");
+    }
+  }, [databases]);
 
   const onFinish = async (values: Record<string, string | number>) => {
     setLoading(true);
@@ -69,20 +82,32 @@ const App: React.FC = () => {
           password,
         },
       };
-      const res = await fetch("http://localhost:3000/api/list-databases/", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(config),
-      });
+      const res = await fetch(
+        `${import.meta.env.VITE_API_URL}/list-databases/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(config),
+        }
+      );
 
       const data = await res.json();
-      if (data.result && data.result.length > 0) {
-        messageApi.open({
-          type: "success",
-          content: data.message || "Databases fetched successfully",
-        });
-        localStorage.setItem("databases", JSON.stringify(data.result[0]));
-        setDatabases(data.result[0]);
+      if (data) {
+        if (data.error) {
+          messageApi.open({
+            type: "error",
+            content: data.error,
+          });
+          return;
+        }
+        if (data.result && data.result.length > 0) {
+          messageApi.open({
+            type: "success",
+            content: data.message || "Databases fetched successfully",
+          });
+          localStorage.setItem("databases", JSON.stringify(data.result[0]));
+          setDatabases(data.result[0]);
+        }
       } else {
         messageApi.open({
           type: "error",
@@ -107,7 +132,7 @@ const App: React.FC = () => {
 
     try {
       const res = await fetch(
-        `http://localhost:3000/api/generate-schema-doc/${value}`,
+        `${import.meta.env.VITE_API_URL}/generate-schema-doc/${value}`,
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -116,6 +141,16 @@ const App: React.FC = () => {
 
       const data = await res.json();
       if (data) {
+        if (data.error) {
+          messageApi.open({
+            type: "error",
+            content: data.error,
+          });
+          if (data.error.includes("connection expired")) {
+            setDatabases([]);
+          }
+          return;
+        }
         const newDbObj = {
           mermaid: "",
           title: "",
@@ -129,10 +164,6 @@ const App: React.FC = () => {
           newDbObj.mermaid = svg;
           setDiagram(svg);
         }
-        if (data.title) {
-          newDbObj.title = data.title;
-          setDocTitle(data.title);
-        }
         if (data.documentation) {
           newDbObj.documentation = data.documentation;
           setDoc(data.documentation);
@@ -142,7 +173,7 @@ const App: React.FC = () => {
           type: "success",
           content: "Database schema and documentation generated successfully",
         });
-
+        localStorage.setItem("database", value);
         localStorage.setItem("dbSchemaDoc", JSON.stringify(newDbObj));
       } else {
         messageApi.open({
@@ -279,12 +310,7 @@ const App: React.FC = () => {
                   </TabPane>
                   <TabPane tab="Documentation" key="2">
                     <div className="scrollable-box">
-                      {doc && (
-                        <>
-                          <h3>{docTitle}</h3>
-                          <ReactMarkdown>{doc}</ReactMarkdown>
-                        </>
-                      )}
+                      {doc && <ReactMarkdown>{doc}</ReactMarkdown>}
                       {!doc && (
                         <Empty description="No Documentation available" />
                       )}
