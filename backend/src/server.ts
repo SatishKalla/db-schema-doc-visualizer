@@ -2,10 +2,10 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import routes from "./routes/index";
-import { PORT_BACKEND } from "./config";
+import { PORT_BACKEND, FE_URL } from "./config";
 
 const app = express();
-app.use(cors({ origin: "http://localhost:5173" }));
+app.use(cors({ origin: FE_URL }));
 app.use(bodyParser.json({ limit: "1mb" }));
 
 async function main() {
