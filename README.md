@@ -2,7 +2,7 @@
 
 A tool to visualize and document database schemas. This project is divided into two main parts: **Frontend** and **Backend**.
 
----
+## Have a look [Demo](https://db-schema-doc-visualizer.onrender.com/).
 
 ## Table of Contents
 
