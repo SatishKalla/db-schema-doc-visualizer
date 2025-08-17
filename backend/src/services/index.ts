@@ -34,7 +34,7 @@ async function listDatabases(config: DbConfig) {
       return databases;
     } else if (client === "mysql2") {
       const result = await db.raw("SHOW DATABASES");
-      const databases = result.map((row: any) => row.Database);
+      const databases = result[0].map((row: any) => row.Database);
       return databases;
     }
 
