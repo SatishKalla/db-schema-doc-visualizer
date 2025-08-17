@@ -4,9 +4,10 @@ export interface DbConfig {
   client: string;
   connection: {
     host: string;
+    port: number;
     user: string;
     password: string;
-    database: string;
+    database?: string;
   };
 }
 
