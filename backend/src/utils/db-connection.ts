@@ -36,6 +36,7 @@ export function getDbConnection(database: string): Knex {
         user: db.client.config.connection.user,
         password: db.client.config.connection.password,
         database: database,
+        ssl: { rejectUnauthorized: false },
       },
     });
   }
