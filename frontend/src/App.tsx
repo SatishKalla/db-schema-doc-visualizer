@@ -105,8 +105,8 @@ const App: React.FC = () => {
             type: "success",
             content: data.message || "Databases fetched successfully",
           });
-          localStorage.setItem("databases", JSON.stringify(data.result[0]));
-          setDatabases(data.result[0]);
+          localStorage.setItem("databases", JSON.stringify(data.result));
+          setDatabases(data.result);
         }
       } else {
         messageApi.open({
