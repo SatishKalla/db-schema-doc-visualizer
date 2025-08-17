@@ -29,10 +29,16 @@ async function listDatabases(config: DbConfig) {
     const db = initializeDb({ client, connection });
 
     if (client === "pg") {
-      return db.raw("SELECT datname FROM pg_database");
+      const result = await db.raw("SELECT datname FROM pg_database");
+      const databases = result.rows.map((row: any) => row.datname);
+      return databases;
+    } else if (client === "mysql2") {
+      const result = await db.raw("SHOW DATABASES");
+      const databases = result.map((row: any) => row.Database);
+      return databases;
     }
 
-    return db.raw("SHOW DATABASES");
+    return new Error("Unsupported database client");
   } catch (err) {
     throw err;
   }

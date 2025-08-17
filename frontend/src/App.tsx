@@ -30,7 +30,7 @@ const App: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
 
   const [loading, setLoading] = useState(false);
-  const [databases, setDatabases] = useState<{ Database: string }[]>([]);
+  const [databases, setDatabases] = useState<string[]>([]);
   const [diagram, setDiagram] = useState("");
   const [doc, setDoc] = useState("");
   const [selected, setSelected] = useState<string>("");
@@ -280,13 +280,9 @@ const App: React.FC = () => {
                   onChange={(e) => handleSelectDatabase(e.target.value)}
                   className="radio-button-list"
                 >
-                  {databases.map(({ Database }) => (
-                    <Radio
-                      key={Database}
-                      value={Database}
-                      className="custom-radio"
-                    >
-                      {Database}
+                  {databases.map((db) => (
+                    <Radio key={db} value={db} className="custom-radio">
+                      {db}
                     </Radio>
                   ))}
                 </Radio.Group>
