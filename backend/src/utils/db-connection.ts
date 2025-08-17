@@ -16,7 +16,7 @@ let db: Knex | null = null;
 export function initializeDb(config: DbConfig) {
   db = knex({
     client: config.client,
-    connection: config.connection,
+    connection: { ...config.connection, ssl: { rejectUnauthorized: false } },
   });
   return db;
 }
