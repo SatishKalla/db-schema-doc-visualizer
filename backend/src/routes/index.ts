@@ -1,15 +1,15 @@
 import express from "express";
 import {
-  checkAIConnectionApi,
+  checkAIConnection,
   generateDiagramAndDocs,
   listDatabases,
 } from "../services/index";
 
 const router = express.Router();
 
-router.get("/check-gemini-api", async (req, res) => {
+router.get("/check-ai-connection", async (req, res) => {
   try {
-    const response = await checkAIConnectionApi();
+    const response = await checkAIConnection();
     res.json(response);
   } catch (err) {
     if (err instanceof Error) {
@@ -31,7 +31,7 @@ router.post("/list-databases", async (req, res) => {
     res.json({ message: "Databases retrieved successfully!", result });
   } catch (err: unknown) {
     if (err instanceof Error) {
-      res.status(500).json({ error: err.message });
+      res.status(500).json({ error: err });
     } else {
       res.status(500).json({ error: "An unknown error occurred" });
     }

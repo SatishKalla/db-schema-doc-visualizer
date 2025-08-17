@@ -6,7 +6,7 @@ import {
   initializeDb,
 } from "../utils/db-connection";
 
-async function checkAIConnectionApi() {
+async function checkAIConnection() {
   try {
     const response = await chatModel.invoke([
       new SystemMessage("You are a helpful assistant."),
@@ -28,9 +28,11 @@ async function listDatabases(config: DbConfig) {
 
     const db = initializeDb({ client, connection });
 
-    const result = await db.raw("SHOW DATABASES");
+    if (client === "pg") {
+      return db.raw("SELECT datname FROM pg_database");
+    }
 
-    return result;
+    return db.raw("SHOW DATABASES");
   } catch (err) {
     throw err;
   }
@@ -140,7 +142,7 @@ async function generateDiagramAndDocs(database: string) {
 }
 
 export {
-  checkAIConnectionApi,
+  checkAIConnection,
   listDatabases,
   getDatabaseSchema,
   generateDiagramAndDocs,
