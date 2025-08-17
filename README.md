@@ -1,38 +1,76 @@
 # DB Schema Doc Visualizer
 
-DB Schema Doc Visualizer is a tool designed to help developers and database administrators visualize and document database schemas. It provides an intuitive interface to explore tables, relationships, and metadata, making it easier to understand and communicate database structures.
+A tool to visualize and document database schemas. This project is divided into two main parts: **Frontend** and **Backend**.
 
-## Features
+---
 
-- Visualize database tables and relationships
-- Generate schema documentation automatically
-- Export visualizations and documentation
-- Support for multiple database engines
+## Table of Contents
 
-## Installation
+- [Project Structure](#project-structure)
+- [Frontend](#frontend)
+- [Backend](#backend)
+- [Getting Started](#getting-started)
+
+---
+
+## Project Structure
+
+```
+db-schema-doc-visualizer/
+├── frontend/
+├── backend/
+└── README.md
+```
+
+---
+
+## Frontend
+
+The frontend is responsible for the user interface and visualization of database schemas.
+
+- **Tech Stack:** React + Vite
+- **Location:** `/frontend`
+- **Features:**
+  - Interactive schema diagrams
+  - Documentation viewer
+
+### Setup
 
 ```bash
-git clone https://github.com/SatishKalla/db-schema-doc-visualizer.git
-cd db-schema-doc-visualizer
+cd frontend
 npm install
+npm run start
 ```
 
-## Usage
+---
+
+## Backend
+
+The backend handles schema extraction, API endpoints, and documentation generation.
+
+- **Tech Stack:** Node.js + Express
+- **Location:** `/backend`
+- **Features:**
+  - Connects to databases
+  - Exposes RESTful APIs
+  - Generates schema documentation
+
+### Setup
 
 ```bash
-npm start
+cd backend
+npm install
+npm run start
 ```
 
-Open your browser and navigate to `http://localhost:3000` to access the visualizer.
+---
 
-## Configuration
+## Getting Started
 
-Edit the `config.json` file to specify your database connection details.
+1. Clone the repository.
+2. Install dependencies for both frontend and backend.
+3. Start backend and frontend servers.
+4. Access the frontend in your browser.
+5. Access the backend api's in postman.
 
-## Contributing
-
-Contributions are welcome! Please open issues or submit pull requests for improvements and bug fixes.
-
-## License
-
-This project is licensed under the MIT License.
+---
