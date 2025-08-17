@@ -46,7 +46,7 @@ async function listDatabases(config: DbConfig) {
 
 async function getDatabaseSchema(database: string) {
   try {
-    const db = getDbConnection();
+    const db = getDbConnection(database);
 
     let tables = [];
     let ddl = [];
@@ -61,16 +61,16 @@ async function getDatabaseSchema(database: string) {
         ddl.push(createRes[0]["Create Table"] + ";");
       }
     } else if (db.client.config.client === "pg") {
-      const result = await db("pg_tables")
-        .select("tablename")
-        .where("schemaname", "public");
-      tables = result.map((r) => r.tablename);
+      const result = await db.raw(`
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+      `);
+      tables = result.rows.map((row: any) => row.table_name);
 
       for (const t of tables) {
-        const createRes = await db.raw(
-          `SELECT pg_get_tabledef('${t}'::regclass) AS ddl;`
-        );
-        ddl.push(createRes.rows[0].ddl + ";");
+        const createRes = await db.raw(`SELECT pg_get_tabledef('${t}')`);
+        ddl.push(createRes.rows[0].pg_get_tabledef + ";");
       }
     } else {
       return null;

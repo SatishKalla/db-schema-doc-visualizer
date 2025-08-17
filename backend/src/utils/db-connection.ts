@@ -21,11 +21,23 @@ export function initializeDb(config: DbConfig) {
   return db;
 }
 
-export function getDbConnection(): Knex {
+export function getDbConnection(database: string): Knex {
   if (!db) {
     throw new Error(
       "Database connection expired. Please connect to the database."
     );
+  }
+
+  if (db.client.config.client === "pg" && database) {
+    return knex({
+      client: "pg",
+      connection: {
+        host: db.client.config.connection.host,
+        user: db.client.config.connection.user,
+        password: db.client.config.connection.password,
+        database: database,
+      },
+    });
   }
   return db;
 }
