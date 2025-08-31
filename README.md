@@ -1,6 +1,8 @@
 # DB Schema Doc Visualizer
 
-A tool to visualize and document database schemas. This project is divided into two main parts: **Frontend** and **Backend**.
+Visualize, explore, and document your database schema—with an AI schema expert that answers questions, drafts docs, and guides best practices.
+
+This project is divided into two main parts: **Frontend** and **Backend**.
 
 ## Have a look [Demo](https://db-schema-doc-visualizer.onrender.com/).
 
@@ -31,8 +33,8 @@ The frontend is responsible for the user interface and visualization of database
 - **Tech Stack:** React + Vite
 - **Location:** `/frontend`
 - **Features:**
-  - Interactive schema diagrams
-  - Documentation viewer
+  - Interactive schema diagrams (Mermaid Js)
+  - Documentation viewer (React Markdown)
 
 ### Setup
 
@@ -48,7 +50,7 @@ npm run start
 
 The backend handles schema extraction, API endpoints, and documentation generation.
 
-- **Tech Stack:** Node.js + Express
+- **Tech Stack:** Node.js + Express(Langchain.js with OpenRouter and knex.js)
 - **Location:** `/backend`
 - **Features:**
   - Connects to databases

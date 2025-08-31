@@ -18,10 +18,11 @@ import { ThunderboltOutlined } from "@ant-design/icons";
 import mermaid from "mermaid";
 import ReactMarkdown from "react-markdown";
 import "./App.css";
+import ChatAgentModal from "./components/ChatAgentModal";
+import type { TabsProps } from "antd";
 
 const { Header, Content } = Layout;
 const { Title } = Typography;
-const { TabPane } = Tabs;
 
 mermaid.initialize({ startOnLoad: true });
 
@@ -34,6 +35,7 @@ const App: React.FC = () => {
   const [diagram, setDiagram] = useState("");
   const [doc, setDoc] = useState("");
   const [selected, setSelected] = useState<string>("");
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const storedDatabases = localStorage.getItem("databases");
@@ -91,22 +93,22 @@ const App: React.FC = () => {
         }
       );
 
-      const data = await res.json();
-      if (data) {
-        if (data.error) {
+      const response = await res.json();
+      if (response) {
+        if (response.error) {
           messageApi.open({
             type: "error",
-            content: data.error,
+            content: response.error,
           });
           return;
         }
-        if (data.result && data.result.length > 0) {
+        if (response.data && response.data.length > 0) {
           messageApi.open({
             type: "success",
-            content: data.message || "Databases fetched successfully",
+            content: response.message || "Databases fetched successfully",
           });
-          localStorage.setItem("databases", JSON.stringify(data.result));
-          setDatabases(data.result);
+          localStorage.setItem("databases", JSON.stringify(response.data));
+          setDatabases(response.data);
         }
       } else {
         messageApi.open({
@@ -139,14 +141,14 @@ const App: React.FC = () => {
         }
       );
 
-      const data = await res.json();
-      if (data) {
-        if (data.error) {
+      const response = await res.json();
+      if (response) {
+        if (response.error) {
           messageApi.open({
             type: "error",
-            content: data.error,
+            content: response.error,
           });
-          if (data.error.includes("connection expired")) {
+          if (response.error.includes("connection expired")) {
             setDatabases([]);
           }
           return;
@@ -156,25 +158,36 @@ const App: React.FC = () => {
           title: "",
           documentation: "",
         };
-        if (data.mermaid) {
-          const { svg } = await mermaid.render(
-            "generatedDiagram",
-            data.mermaid
-          );
-          newDbObj.mermaid = svg;
-          setDiagram(svg);
-        }
-        if (data.documentation) {
-          newDbObj.documentation = data.documentation;
-          setDoc(data.documentation);
-        }
 
-        messageApi.open({
-          type: "success",
-          content: "Database schema and documentation generated successfully",
-        });
-        localStorage.setItem("database", value);
-        localStorage.setItem("dbSchemaDoc", JSON.stringify(newDbObj));
+        if (response.data) {
+          const { data } = response;
+          if (data.mermaid) {
+            const { svg } = await mermaid.render(
+              "generatedDiagram",
+              data.mermaid
+            );
+            newDbObj.mermaid = svg;
+            setDiagram(svg);
+          }
+          if (data.documentation) {
+            newDbObj.documentation = data.documentation;
+            setDoc(data.documentation);
+          }
+
+          messageApi.open({
+            type: "success",
+            content:
+              response.message ||
+              "Database schema and documentation generated successfully",
+          });
+          localStorage.setItem("database", value);
+          localStorage.setItem("dbSchemaDoc", JSON.stringify(newDbObj));
+        } else {
+          messageApi.open({
+            type: "error",
+            content: "Failed to generate database schema and documentation",
+          });
+        }
       } else {
         messageApi.open({
           type: "error",
@@ -190,6 +203,31 @@ const App: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const toggleChat = () => setOpen(!open);
+
+  const items: TabsProps["items"] = [
+    {
+      key: "1",
+      label: "ER-Diagram",
+      children: (
+        <div className="scrollable-box">
+          {diagram && <div dangerouslySetInnerHTML={{ __html: diagram }} />}
+          {!diagram && <Empty description="No ER-Diagram available" />}
+        </div>
+      ),
+    },
+    {
+      key: "2",
+      label: "Documentation",
+      children: (
+        <div className="scrollable-box">
+          {doc && <ReactMarkdown>{doc}</ReactMarkdown>}
+          {!doc && <Empty description="No Documentation available" />}
+        </div>
+      ),
+    },
+  ];
 
   return (
     <Layout className="layout">
@@ -293,30 +331,21 @@ const App: React.FC = () => {
           {!loading && (
             <Col span={18}>
               <div className="results-container">
-                <Tabs defaultActiveKey="1">
-                  <TabPane tab="ER-Diagram" key="1">
-                    <div className="scrollable-box">
-                      {diagram && (
-                        <div dangerouslySetInnerHTML={{ __html: diagram }} />
-                      )}
-                      {!diagram && (
-                        <Empty description="No ER-Diagram available" />
-                      )}
-                    </div>
-                  </TabPane>
-                  <TabPane tab="Documentation" key="2">
-                    <div className="scrollable-box">
-                      {doc && <ReactMarkdown>{doc}</ReactMarkdown>}
-                      {!doc && (
-                        <Empty description="No Documentation available" />
-                      )}
-                    </div>
-                  </TabPane>
-                </Tabs>
+                <Tabs defaultActiveKey="1" items={items} />
+                {diagram && doc && (
+                  <Button
+                    type="primary"
+                    style={{ position: "fixed", top: 20, right: 20 }}
+                    onClick={toggleChat}
+                  >
+                    Chat
+                  </Button>
+                )}
               </div>
             </Col>
           )}
         </Row>
+        {open && <ChatAgentModal open={open} toggleChat={toggleChat} />}
       </Content>
     </Layout>
   );

@@ -5,6 +5,8 @@ import {
   getDbConnection,
   initializeDb,
 } from "../utils/db-connection";
+import agentGraph from "../utils/agent-graph";
+import { createRetriever } from "../utils/retriever";
 
 async function checkAIConnection() {
   try {
@@ -194,13 +196,23 @@ async function generateDiagramAndDocs(database: string) {
       throw new Error("Failed to parse JSON from response:\n" + cleaned);
     }
   }
-
+  await createRetriever(parsed.erDiagram, parsed.documentation);
   return parsed;
+}
+
+async function runAgentFlow(question: string) {
+  try {
+    const response = await agentGraph.invoke({ input: question });
+    return response;
+  } catch (error) {
+    throw new Error(`Agent flow execution failed: ${JSON.stringify(error)}`);
+  }
 }
 
 export {
   checkAIConnection,
   listDatabases,
   getDatabaseSchema,
+  runAgentFlow,
   generateDiagramAndDocs,
 };

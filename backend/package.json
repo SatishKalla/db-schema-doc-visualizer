@@ -8,8 +8,10 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@langchain/community": "^0.3.53",
     "@langchain/core": "^0.3.70",
     "@langchain/google-genai": "^0.2.16",
+    "@langchain/langgraph": "^0.4.8",
     "@langchain/openai": "^0.6.7",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
