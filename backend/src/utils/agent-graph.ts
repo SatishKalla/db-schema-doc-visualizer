@@ -59,7 +59,7 @@ const agentNode = async (state: GraphStateAnnotation) => {
 // 4. Fallback if not DB-related
 const fallbackNode = async () => {
   return {
-    output: "⚠️ I can only answer select database-related questions.",
+    output: "⚠️ I can only answer selected database-related questions.",
   };
 };
 
