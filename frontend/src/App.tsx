@@ -14,7 +14,11 @@ import {
   message,
   Radio,
 } from "antd";
-import { ThunderboltOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  ThunderboltOutlined,
+  ZoomOutOutlined,
+} from "@ant-design/icons";
 import mermaid from "mermaid";
 import ReactMarkdown from "react-markdown";
 import "./App.css";
@@ -29,6 +33,7 @@ mermaid.initialize({ startOnLoad: true });
 const App: React.FC = () => {
   const [form] = Form.useForm();
   const [messageApi, contextHolder] = message.useMessage();
+  const [isZoomed, setIsZoomed] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [databases, setDatabases] = useState<string[]>([]);
@@ -211,8 +216,22 @@ const App: React.FC = () => {
       key: "1",
       label: "ER-Diagram",
       children: (
-        <div className="scrollable-box">
-          {diagram && <div dangerouslySetInnerHTML={{ __html: diagram }} />}
+        <div className="scrollable-box er-diagram-container">
+          {diagram && (
+            <>
+              <div className="diagram-controls">
+                <Button
+                  type="text"
+                  icon={isZoomed ? <ZoomOutOutlined /> : <SearchOutlined />}
+                  onClick={() => setIsZoomed(!isZoomed)}
+                />
+              </div>
+              <div
+                className={`diagram-content ${isZoomed ? "zoomed" : ""}`}
+                dangerouslySetInnerHTML={{ __html: diagram }}
+              />
+            </>
+          )}
           {!diagram && <Empty description="No ER-Diagram available" />}
         </div>
       ),
@@ -338,7 +357,7 @@ const App: React.FC = () => {
                     style={{ position: "fixed", top: 20, right: 20 }}
                     onClick={toggleChat}
                   >
-                    Chat
+                    Ask
                   </Button>
                 )}
               </div>

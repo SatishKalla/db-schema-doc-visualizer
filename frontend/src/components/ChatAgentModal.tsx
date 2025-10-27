@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Drawer, Input, List, Tooltip, Typography, Space, message } from "antd";
-import { SendOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import {
+  SendOutlined,
+  CloseCircleOutlined,
+  LoadingOutlined,
+} from "@ant-design/icons";
+import ReactMarkdown from "react-markdown";
 
 const { Text } = Typography;
 const { TextArea } = Input;
@@ -12,6 +17,7 @@ const ChatAgentModal = ({
   open: boolean;
   toggleChat: () => void;
 }) => {
+  const [loading, setLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<{ role: string; text: string }[]>(
@@ -22,6 +28,7 @@ const ChatAgentModal = ({
     try {
       if (!question) return;
 
+      setLoading(true);
       const newMessages = [...messages, { role: "user", text: question }];
       setMessages(newMessages);
 
@@ -42,10 +49,10 @@ const ChatAgentModal = ({
         }
 
         if (response.data) {
-          messageApi.open({
-            type: "success",
-            content: response.message || "Agent flow execution failed",
-          });
+          // messageApi.open({
+          //   type: "success",
+          //   content: response.message || "Agent flow execution failed",
+          // });
           const { data } = response;
           setMessages([...newMessages, { role: "agent", text: data.output }]);
           setQuestion("");
@@ -68,7 +75,14 @@ const ChatAgentModal = ({
       });
     } finally {
       setQuestion("");
+      setLoading(false);
     }
+  };
+
+  const cancelAsk = () => {
+    setLoading(false);
+    setMessages([...messages]);
+    setQuestion("");
   };
 
   return (
@@ -109,7 +123,7 @@ const ChatAgentModal = ({
               >
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   <Text strong>{msg.role === "user" ? "You" : "Agent"}:</Text>
-                  <Text>{msg.text}</Text>
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
                 </div>
               </List.Item>
             )}
@@ -137,17 +151,34 @@ const ChatAgentModal = ({
             style={{ paddingRight: 40 }}
           />
           <Tooltip title="Send">
-            <SendOutlined
-              onClick={handleAsk}
-              style={{
-                position: "absolute",
-                right: 20,
-                bottom: 15,
-                fontSize: 20,
-                color: question ? "#000000" : "#ccc",
-                cursor: question ? "pointer" : "not-allowed",
-              }}
-            />
+            {!loading && (
+              <SendOutlined
+                onClick={handleAsk}
+                style={{
+                  position: "absolute",
+                  right: 20,
+                  bottom: 15,
+                  fontSize: 20,
+                  color: question ? "#000000" : "#ccc",
+                  cursor: question ? "pointer" : "not-allowed",
+                }}
+              />
+            )}
+          </Tooltip>
+          <Tooltip title="Stop">
+            {loading && (
+              <LoadingOutlined
+                onClick={cancelAsk}
+                style={{
+                  position: "absolute",
+                  right: 20,
+                  bottom: 15,
+                  fontSize: 20,
+                  color: question ? "#000000" : "#ccc",
+                  cursor: question ? "pointer" : "not-allowed",
+                }}
+              />
+            )}
           </Tooltip>
         </div>
       </Drawer>
