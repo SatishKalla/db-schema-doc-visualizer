@@ -354,7 +354,7 @@ const App: React.FC = () => {
                 {diagram && doc && (
                   <Button
                     type="primary"
-                    style={{ position: "fixed", top: 20, right: 20 }}
+                    style={{ position: "absolute", top: 25, right: 20 }}
                     onClick={toggleChat}
                   >
                     Ask

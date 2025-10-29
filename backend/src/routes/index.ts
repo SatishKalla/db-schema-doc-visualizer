@@ -64,13 +64,13 @@ router.get("/generate-schema-doc/:database", async (req, res) => {
 
 router.post("/ask-agent", async (req, res) => {
   try {
-    const { question } = req.body;
+    const { question, database } = req.body;
 
-    if (!question) {
+    if (!question || !database) {
       return res.status(400).json({ error: "Invalid request body" });
     }
 
-    const result = await runAgentFlow(question);
+    const result = await runAgentFlow(question, database);
 
     res.json({
       message: "Agent flow executed successfully!",

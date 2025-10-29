@@ -32,10 +32,11 @@ const ChatAgentModal = ({
       const newMessages = [...messages, { role: "user", text: question }];
       setMessages(newMessages);
 
+      const database = localStorage.getItem("database") || "";
       const res = await fetch(`${import.meta.env.VITE_API_URL}/ask-agent`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({ question, database }),
       });
 
       const response = await res.json();

@@ -9,6 +9,7 @@ export interface DbConfig {
     password: string;
     database?: string;
   };
+  pool: { min: number; max: number };
 }
 
 let db: Knex | null = null;
@@ -17,6 +18,7 @@ export function initializeDb(config: DbConfig) {
   db = knex({
     client: config.client,
     connection: { ...config.connection, ssl: { rejectUnauthorized: false } },
+    pool: { min: 0, max: 5 },
   });
   return db;
 }
@@ -38,6 +40,7 @@ export function getDbConnection(database: string): Knex {
         database: database,
         ssl: { rejectUnauthorized: false },
       },
+      pool: { min: 0, max: 5 },
     });
   }
   return db;

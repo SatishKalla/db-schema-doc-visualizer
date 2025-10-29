@@ -1,6 +1,7 @@
 import { END, START, StateGraph, Annotation } from "@langchain/langgraph";
 import { chatModel } from "./ai-models";
 import { getRetriever } from "./retriever";
+import { getDbConnection } from "./db-connection";
 
 const keyWords = [
   "table",
@@ -121,6 +122,9 @@ const GraphStateAnnotation = Annotation.Root({
   isDbQuestion: Annotation<boolean>(),
   intent: Annotation<string>(),
   confidence: Annotation<number>(),
+  sql: Annotation<string>(),
+  queryResult: Annotation<any>(),
+  database: Annotation<string>(),
 });
 
 type GraphStateAnnotation = typeof GraphStateAnnotation.State;
@@ -240,6 +244,8 @@ const retrieveNode = async (state: GraphStateAnnotation) => {
 
     If a schema or query context is provided, use it directly for examples.
 
+    When preparing sql queries, use database name before table names (eg: mydb.users).
+
     If no schema is provided, base your answer on general best practices and clearly explain any assumptions you make.`;
 
   // Intent-specific guidance
@@ -281,7 +287,66 @@ const agentNode = async (state: GraphStateAnnotation) => {
     typeof response.content === "string"
       ? response.content
       : String(response.content);
-  return { output: out };
+
+  // Try to extract SQL snippet from the model output (```sql ... ``` or SQL: ...)
+  let sql = "";
+  const codeFenceMatch = out.match(/```sql[\s\S]*?```/i);
+  if (codeFenceMatch) {
+    sql = codeFenceMatch[0]
+      .replace(/```sql/i, "")
+      .replace(/```/g, "")
+      .trim();
+  } else {
+    const sqlLabelMatch = out.match(/SQL:\s*([\s\S]*)/i);
+    if (sqlLabelMatch && sqlLabelMatch[1]) sql = sqlLabelMatch[1].trim();
+  }
+
+  // Only allow simple SELECT statements to be executed for safety
+  const safeSql = sql && /^\s*select\b/i.test(sql) ? sql : "";
+
+  return { output: out, sql: safeSql };
+};
+
+// 4. Execute SQL and summarize results
+const executeNode = async (state: GraphStateAnnotation) => {
+  const sql = state.sql;
+  if (!sql) {
+    // Nothing to execute — pass through the agent output
+    return { output: state.output };
+  }
+
+  try {
+    // prefer explicit database from state, fallback to empty (getDbConnection will use global db)
+    const dbName = (state.database || "").trim();
+
+    const db = getDbConnection(dbName);
+
+    const res = await db.raw(sql);
+
+    let rows: any[] = [];
+    if (Array.isArray(res)) {
+      rows = res[0] || [];
+    } else if (res && res.rows) {
+      rows = res.rows;
+    } else if (typeof res === "object") {
+      rows = res.rows || res[0] || [];
+    }
+
+    const sample = JSON.stringify(rows);
+
+    const summaryPrompt = `You are given the results of a SQL query in JSON format. Provide a concise human-friendly summary: key columns, notable patterns or top values, and an explanation suitable for a developer to understand the output.\n\nSQL: ${sql}\n\nResults (JSON): ${sample}`;
+
+    const summaryRes = await chatModel.invoke(summaryPrompt);
+    const summary =
+      typeof summaryRes.content === "string"
+        ? summaryRes.content
+        : String(summaryRes.content);
+
+    return { queryResult: rows, output: summary };
+  } catch (err: any) {
+    const errMsg = `⚠️ Failed to execute SQL: ${err?.message ?? String(err)}`;
+    return { output: `${state.output}\n\n${errMsg}` };
+  }
 };
 
 // 4. Fallback if not DB-related
@@ -305,13 +370,15 @@ const workflow = new StateGraph(GraphStateAnnotation)
   .addNode("classify", classifyNode)
   .addNode("retrieve", retrieveNode)
   .addNode("agent", agentNode)
+  .addNode("execute", executeNode)
   .addNode("fallback", fallbackNode)
   .addEdge(START, "classify")
   .addConditionalEdges("classify", (state) =>
     state.isDbQuestion ? "retrieve" : "fallback"
   )
   .addEdge("retrieve", "agent")
-  .addEdge("agent", END)
+  .addEdge("agent", "execute")
+  .addEdge("execute", END)
   .addEdge("fallback", END);
 
 const agentGraph = workflow.compile();
