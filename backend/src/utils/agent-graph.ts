@@ -2,6 +2,10 @@ import { END, START, StateGraph, Annotation } from "@langchain/langgraph";
 import { chatModel } from "./ai-models";
 import { getRetriever } from "./retriever";
 import { getDbConnection } from "./db-connection";
+import {
+  prepareAgentBaseSystemPrompt,
+  prepareAgentSummaryPrompt,
+} from "./prompts";
 
 const keyWords = [
   "table",
@@ -231,22 +235,7 @@ const retrieveNode = async (state: GraphStateAnnotation) => {
       : "";
 
   // Base instruction describing desired outputs
-  let instruction = `
-    You are a helpful database assistant that specializes in analyzing and improving database schemas, ER diagrams, SQL queries, and performance issues.
-
-    When answering questions:
-
-    Always format responses clearly with headings, bullet points, and code blocks so users can easily read and understand them.
-
-    When relevant, provide syntactically correct SQL examples and explain your reasoning in plain, beginner-friendly language.
-
-    Give prioritized, actionable steps for fixing issues (e.g., add indexes, rewrite joins, normalize tables).
-
-    If a schema or query context is provided, use it directly for examples.
-
-    When preparing sql queries, use database name before table names (eg: mydb.users).
-
-    If no schema is provided, base your answer on general best practices and clearly explain any assumptions you make.`;
+  let instruction = prepareAgentBaseSystemPrompt(state.database);
 
   // Intent-specific guidance
   if (
@@ -334,7 +323,7 @@ const executeNode = async (state: GraphStateAnnotation) => {
 
     const sample = JSON.stringify(rows);
 
-    const summaryPrompt = `You are given the results of a SQL query in JSON format. Provide a concise human-friendly summary: key columns, notable patterns or top values, and an explanation suitable for a developer to understand the output.\n\nSQL: ${sql}\n\nResults (JSON): ${sample}`;
+    const summaryPrompt = prepareAgentSummaryPrompt(sql, sample);
 
     const summaryRes = await chatModel.invoke(summaryPrompt);
     const summary =
