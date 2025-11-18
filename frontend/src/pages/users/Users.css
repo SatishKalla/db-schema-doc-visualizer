@@ -1,0 +1,45 @@
+.users-container {
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 8px;
+}
+
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.users-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.users-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.users-filter label {
+  font-weight: 500;
+  color: #475569;
+}
+
+.status-pending {
+  color: #f59e0b;
+  font-weight: 500;
+}
+
+.status-approved {
+  color: #10b981;
+  font-weight: 500;
+}
+
+.status-rejected {
+  color: #ef4444;
+  font-weight: 500;
+}

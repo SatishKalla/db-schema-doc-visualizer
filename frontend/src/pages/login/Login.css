@@ -4,6 +4,8 @@
   align-items: center;
   justify-content: space-around;
   background: #0b1521;
+  gap: 48px;
+  flex-wrap: nowrap;
 }
 
 .glass-card {
@@ -17,6 +19,15 @@
   backdrop-filter: blur(10px) saturate(120%);
   border: 1px solid rgba(255, 255, 255, 0.06);
   color: #e6eef8;
+  flex: 0 0 auto;
+}
+
+.logo-card {
+  width: 40%;
+  max-width: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .card-header {
@@ -27,7 +38,9 @@
 }
 
 .card-logo {
-  height: 500px;
+  max-width: 420px;
+  width: 100%;
+  height: auto;
   object-fit: contain;
 }
 
@@ -55,11 +68,11 @@
 .input-field {
   transition: box-shadow 0.18s ease, border-color 0.18s ease;
   background: rgba(255, 255, 255, 0.03);
-  color: #e6eef8;
+  color: #000000;
 }
 
 .ant-input::placeholder {
-  color: rgba(230, 240, 255, 0.45);
+  color: rgba(32, 32, 32, 0.45);
 }
 
 .ant-input:focus,
@@ -117,12 +130,62 @@
   font-size: 13px;
 }
 
-@media (max-width: 520px) {
-  .glass-card {
-    padding: 20px;
-    border-radius: 12px;
+/* Larger breakpoints to gracefully scale between desktop and mobile */
+@media (max-width: 1024px) {
+  .login-page {
+    padding: 36px 28px;
+    gap: 32px;
+  }
+  .logo-card {
+    width: 45%;
   }
   .card-logo {
-    height: 28px;
+    max-width: 360px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Stack vertically on tablets and smaller screens */
+  .login-page {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 28px 20px;
+    gap: 20px;
+  }
+  .logo-card {
+    width: auto;
+    margin: 0;
+  }
+  .card-logo {
+    max-width: 280px;
+  }
+  .glass-card {
+    max-width: 480px;
+    width: 100%;
+    padding: 24px;
+  }
+}
+
+@media (max-width: 520px) {
+  .glass-card {
+    padding: 18px;
+    border-radius: 12px;
+    margin: 0 6px;
+  }
+  .card-logo {
+    max-width: 160px;
+  }
+  .login-title {
+    font-size: 20px;
+  }
+  .primary-btn,
+  .secondary-btn {
+    height: 44px;
+    font-size: 14px;
+  }
+  .input-field .ant-input,
+  .input-field .ant-input-affix-wrapper {
+    padding: 8px 10px;
   }
 }

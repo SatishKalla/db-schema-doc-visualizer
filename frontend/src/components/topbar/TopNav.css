@@ -1,0 +1,45 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  background: #1e293b;
+  color: #f8fafc;
+  font-family: "Inter", sans-serif;
+  padding: 0px 5px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  margin-right: auto;
+}
+
+.logo-icon {
+  width: 50px;
+  height: 50px;
+}
+
+.navbar-title {
+  color: white !important;
+  margin: 10px;
+}
+
+.navbar-left {
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
+}
+
+.profile {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  color: #f8fafc;
+}
+
+.profile-name {
+  color: #f8fafc;
+  margin-top: 5px;
+  font-weight: 500;
+  font-size: 20px;
+}

@@ -4,7 +4,9 @@ import { loginUser, logoutUser } from "../api/auth";
 
 interface AuthContextValue {
   user: User | null;
-  token: string | null;
+  accessToken: string | null;
+  refreshToken: string | null;
+  expiresAt: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -18,7 +20,9 @@ export const AuthProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  const [expiresAt, setExpiresAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -26,9 +30,11 @@ export const AuthProvider: React.FC<{
     const stored = localStorage.getItem("auth");
     if (stored) {
       try {
-        const parsed = JSON.parse(stored) as AuthResponse;
+        const parsed = JSON.parse(stored) as AuthResponse["response"];
         setUser(parsed.user || null);
-        setToken(parsed.token || null);
+        setAccessToken(parsed.session.access_token || null);
+        setRefreshToken(parsed.session.refresh_token || null);
+        setExpiresAt(parsed.session.expires_at || null);
       } catch {
         // ignore parse errors
       }
@@ -38,11 +44,26 @@ export const AuthProvider: React.FC<{
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const data = await loginUser({ email, password });
-      setUser(data.user);
-      setToken(data.token);
+      const { response } = await loginUser({ email, password });
+      const { session, user } = response;
+
+      setUser(user);
+      setAccessToken(session.access_token);
+      setRefreshToken(session.refresh_token);
+      setExpiresAt(session.expires_at);
+
       // persist minimal auth info
-      localStorage.setItem("auth", JSON.stringify(data));
+      localStorage.setItem(
+        "auth",
+        JSON.stringify({
+          user,
+          session: {
+            access_token: session.access_token,
+            refresh_token: session.refresh_token,
+            expires_at: session.expires_at,
+          },
+        })
+      );
     } finally {
       setLoading(false);
     }
@@ -51,17 +72,29 @@ export const AuthProvider: React.FC<{
   const logout = async () => {
     setLoading(true);
     try {
-      await logoutUser(token || undefined);
+      await logoutUser(accessToken || undefined);
     } finally {
       setUser(null);
-      setToken(null);
+      setAccessToken(null);
+      setRefreshToken(null);
+      setExpiresAt(null);
       localStorage.removeItem("auth");
       setLoading(false);
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        accessToken,
+        refreshToken,
+        expiresAt,
+        loading,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

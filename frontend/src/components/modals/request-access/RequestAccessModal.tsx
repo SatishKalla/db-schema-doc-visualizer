@@ -1,5 +1,6 @@
 import React from "react";
 import { Modal, Form, Input, Button, message } from "antd";
+import { requestAccess } from "../../../api/access";
 
 type Props = {
   open: boolean;
@@ -8,22 +9,30 @@ type Props = {
 
 const RequestAccessModal: React.FC<Props> = ({ open, onClose }) => {
   const [form] = Form.useForm();
+  const [messageApi, contextHolder] = message.useMessage();
   const [submitting, setSubmitting] = React.useState(false);
 
-  const onFinish = async (values: { name: string; email: string }) => {
+  const onFinish = async (values: { full_name: string; email: string }) => {
     setSubmitting(true);
     try {
-      // TODO: replace with real API call to request access
-      await new Promise((res) => setTimeout(res, 800));
-      message.success(
-        `Request submitted for ${values.name} (${values.email}). We'll be in touch soon.`
-      );
+      // Call real API to request access
+      await requestAccess(values);
+
+      messageApi.open({
+        type: "success",
+        content: `Request submitted for ${values.full_name} (${values.email}). We'll be in touch soon.`,
+      });
       form.resetFields();
-      onClose();
+      setTimeout(() => {
+        onClose();
+      }, 1000);
     } catch (err) {
-      // log the error for debugging
-      console.error(err);
-      message.error("Failed to submit request. Please try again.");
+      // show server-provided message when available
+      const content =
+        (err instanceof Error && err.message) ||
+        String(err) ||
+        "Failed to submit request. Please try again.";
+      messageApi.open({ type: "error", content });
     } finally {
       setSubmitting(false);
     }
@@ -34,11 +43,15 @@ const RequestAccessModal: React.FC<Props> = ({ open, onClose }) => {
       title="Request Access"
       open={open}
       onCancel={onClose}
-      footer={null}
+      footer={contextHolder}
       destroyOnClose
     >
       <Form form={form} layout="vertical" onFinish={onFinish}>
-        <Form.Item name="name" label="Full name" rules={[{ required: true }]}>
+        <Form.Item
+          name="full_name"
+          label="Full name"
+          rules={[{ required: true }]}
+        >
           <Input placeholder="Your full name" />
         </Form.Item>
 

@@ -1,0 +1,70 @@
+.dashboard-header {
+  margin-bottom: 16px;
+}
+
+.db-card {
+  min-height: 210px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.db-title {
+  margin: 0 0 6px 0;
+}
+
+.db-last {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.db-title {
+  word-break: break-word;
+}
+
+.db-last {
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 15px;
+  line-height: 1.35;
+  word-wrap: break-word;
+}
+
+.db-actions {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .db-card {
+    min-height: 210px;
+  }
+}
+
+@media (max-width: 768px) {
+  .db-card {
+    min-height: 180px;
+    padding: 12px;
+  }
+  .db-actions {
+    justify-content: flex-start;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 520px) {
+  .db-card {
+    min-height: unset;
+    padding: 10px;
+  }
+  .db-title {
+    font-size: 16px;
+  }
+  .db-last {
+    font-size: 15px;
+  }
+}

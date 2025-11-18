@@ -1,0 +1,41 @@
+.radio-button-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.custom-radio .ant-radio {
+  display: none !important;
+}
+
+.custom-radio {
+  display: block;
+  padding: 12px 18px;
+  margin-bottom: 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 500;
+  background-color: #fff;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.custom-radio:hover {
+  border-color: #40a9ff;
+  background-color: #f0f8ff;
+  transform: translateY(-1px);
+}
+
+.ant-radio-wrapper-checked.custom-radio {
+  border-color: #1890ff;
+  background-color: #1890ff;
+  color: #fff;
+  font-weight: 600;
+  box-shadow: 0 4px 8px rgba(24, 144, 255, 0.3);
+}
+
+.custom-radio:active {
+  transform: scale(0.97);
+}

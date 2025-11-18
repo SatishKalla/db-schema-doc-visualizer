@@ -4,7 +4,7 @@ const API_BASE = import.meta.env.VITE_API_URL || "";
 
 // Handle login request. Returns AuthResponse on success or throws an Error.
 export async function loginUser(payload: LoginRequest): Promise<AuthResponse> {
-  const res = await fetch(`${API_BASE}/login`, {
+  const res = await fetch(`${API_BASE}/auth/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -22,7 +22,7 @@ export async function loginUser(payload: LoginRequest): Promise<AuthResponse> {
 // Optional: notify server to invalidate token
 export async function logoutUser(token?: string): Promise<void> {
   try {
-    await fetch(`${API_BASE}/logout`, {
+    await fetch(`${API_BASE}/auth/logout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

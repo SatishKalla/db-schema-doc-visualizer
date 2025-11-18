@@ -6,10 +6,18 @@ export interface User {
   name?: string;
 }
 
+export interface Session {
+  access_token: string;
+  refresh_token: string;
+  expires_at: string;
+}
+
 export interface AuthResponse {
-  token: string;
-  user: User;
-  expiresAt?: string;
+  message: string;
+  response: {
+    session: Session;
+    user: User;
+  };
 }
 
 export interface LoginRequest {

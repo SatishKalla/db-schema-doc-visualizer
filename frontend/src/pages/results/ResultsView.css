@@ -1,0 +1,53 @@
+.results-container {
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  height: 100%;
+  background: #fff;
+  overflow: auto;
+  padding: 16px;
+}
+
+.er-diagram-container {
+  position: relative;
+  height: 100%;
+}
+
+.diagram-controls {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 20;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 4px;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+}
+
+.diagram-content {
+  transition: transform 0.18s ease;
+  transform-origin: 0 0;
+  width: 100%;
+}
+
+.diagram-content.zoomed {
+  transform: scale(1.35);
+}
+
+.scrollable-box {
+  min-width: 800px; /* Horizontal scroll */
+  height: 545px; /* Vertical scroll */
+  overflow: auto;
+  border: 1px dashed #ddd;
+  padding: 8px;
+}
+
+.tab-content {
+  padding: 8px;
+}
+
+.ask-button {
+  position: absolute;
+  top: 115px;
+  right: 55px;
+}

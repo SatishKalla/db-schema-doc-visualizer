@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Form, Input, Button, Typography, Alert } from "antd";
+import { Form, Input, Button, Typography, message } from "antd";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import RequestAccessModal from "../../components/modals/request-access/RequestAccessModal";
 import "./Login.css";
@@ -8,16 +9,20 @@ const { Title } = Typography;
 
 const LoginPage: React.FC = () => {
   const { login, loading } = useAuth();
-  const [error, setError] = useState<string | null>(null);
+  const [messageApi, contextHolder] = message.useMessage();
+  const navigate = useNavigate();
   const [openRequest, setOpenRequest] = useState(false);
 
   const onFinish = async (values: { email: string; password: string }) => {
-    setError(null);
     try {
       await login(values.email, values.password);
-      // on success, auth state updates and app will redirect to dashboard
+      // navigate to connections after successful login
+      navigate("/", { replace: true });
     } catch (err: unknown) {
-      setError((err as Error).message || "Login failed");
+      messageApi.open({
+        type: "error",
+        content: (err as Error).message || "Login failed",
+      });
     }
   };
 
@@ -30,18 +35,14 @@ const LoginPage: React.FC = () => {
           className="card-logo"
         />
       </div>
-
+      {contextHolder}
       <div className="glass-card" role="region" aria-label="Sign in">
-        <div className="card-header">Your AI-powered database assistant.</div>
+        <div className="card-header">Your AI-Powered Database Assistant.</div>
 
         <div className="card-body">
           <Title level={3} className="login-title">
             Sign In
           </Title>
-
-          {error && (
-            <Alert className="login-alert" type="error" message={error} />
-          )}
 
           <Form
             layout="vertical"
