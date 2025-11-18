@@ -6,6 +6,7 @@ import {
   prepareAgentBaseSystemPrompt,
   prepareAgentSummaryPrompt,
 } from "./prompts";
+import logger from "./logger";
 
 const keyWords = [
   "table",
@@ -158,6 +159,7 @@ const classifyNode = async (state: GraphStateAnnotation) => {
   Q: "${userMessage.replace(/\n/g, " ").replace(/"/g, '\\"')}"`;
 
   try {
+    logger.info("agent-graph: classifyNode start", { input: userMessage });
     const res = await chatModel.invoke(prompt);
     const raw =
       typeof res.content === "string" ? res.content : String(res.content);
@@ -187,17 +189,33 @@ const classifyNode = async (state: GraphStateAnnotation) => {
           docs.length > 0 &&
           docs.some((d) => d.pageContent && d.pageContent.trim().length > 20);
 
-        if (hasRelevantDocs) return { isDbQuestion: true, intent, confidence };
+        if (hasRelevantDocs) {
+          logger.info(
+            "agent-graph: classifyNode fallback -> relevant docs found",
+            { intent, confidence }
+          );
+          return { isDbQuestion: true, intent, confidence };
+        }
 
         const keywordMatch = keyWords.some((keyword) =>
           userMessage.toLowerCase().includes(keyword)
         );
+        logger.info(
+          "agent-graph: classifyNode fallback -> keyword heuristic result",
+          { keywordMatch, intent, confidence }
+        );
         return { isDbQuestion: keywordMatch, intent, confidence };
       } catch (err) {
+        logger.error("agent-graph: classifyNode fallback error", { err });
         return { isDbQuestion: false };
       }
     }
 
+    logger.info("agent-graph: classifyNode result", {
+      isDbQuestion,
+      intent,
+      confidence,
+    });
     return { isDbQuestion, intent, confidence };
   } catch (err) {
     // On any error, fallback to retriever+keyword; if that fails, return false
@@ -209,14 +227,21 @@ const classifyNode = async (state: GraphStateAnnotation) => {
         docs.length > 0 &&
         docs.some((d) => d.pageContent && d.pageContent.trim().length > 20);
 
-      if (hasRelevantDocs)
+      if (hasRelevantDocs) {
+        logger.info(
+          "agent-graph: classifyNode error fallback -> relevant docs found"
+        );
         return { isDbQuestion: true, intent: "unknown", confidence: 0 };
+      }
 
       const keywordMatch = keyWords.some((keyword) =>
         userMessage.toLowerCase().includes(keyword)
       );
       return { isDbQuestion: keywordMatch, intent: "unknown", confidence: 0 };
     } catch (err2) {
+      logger.error("agent-graph: classifyNode ultimate fallback error", {
+        err2,
+      });
       return { isDbQuestion: false, intent: "unknown", confidence: 0 };
     }
   }
@@ -226,6 +251,10 @@ const classifyNode = async (state: GraphStateAnnotation) => {
 const retrieveNode = async (state: GraphStateAnnotation) => {
   const userMessage = state.input;
   const intent = (state.intent || "unknown").toLowerCase();
+  logger.info("agent-graph: retrieveNode start", {
+    intent,
+    userMessage: (userMessage || "").slice(0, 200),
+  });
   const retriever = getRetriever();
   const docs = await retriever.invoke(userMessage);
 
@@ -261,6 +290,9 @@ const retrieveNode = async (state: GraphStateAnnotation) => {
       "\n\nIf the user asks to list schema elements, prefer concise bullet lists or table-like markdown describing tables and key columns.";
   }
 
+  logger.info("agent-graph: retrieveNode completed", {
+    docsCount: Array.isArray(docs) ? docs.length : 0,
+  });
   return {
     input: `${instruction}\n\nIntent: ${intent}\n\nDatabase documentation and ER diagram info:\n\n${context}\n\nQuestion: ${state.input}`,
   };
@@ -269,6 +301,9 @@ const retrieveNode = async (state: GraphStateAnnotation) => {
 // 3. Answer with context
 const agentNode = async (state: GraphStateAnnotation) => {
   const input = state.input; // retrieveNode already prepared the full prompt
+  logger.info("agent-graph: agentNode invoke", {
+    inputPreview: (input || "").slice(0, 200),
+  });
   const response = await chatModel.invoke(input);
 
   // Normalize to string
@@ -293,6 +328,7 @@ const agentNode = async (state: GraphStateAnnotation) => {
   // Only allow simple SELECT statements to be executed for safety
   const safeSql = sql && /^\s*select\b/i.test(sql) ? sql : "";
 
+  logger.info("agent-graph: agentNode completed", { hasSql: !!safeSql });
   return { output: out, sql: safeSql };
 };
 
@@ -310,6 +346,9 @@ const executeNode = async (state: GraphStateAnnotation) => {
 
     const db = getDbConnection(dbName);
 
+    logger.info("agent-graph: executeNode running sql", {
+      sqlPreview: sql.slice(0, 300),
+    });
     const res = await db.raw(sql);
 
     let rows: any[] = [];
@@ -331,8 +370,12 @@ const executeNode = async (state: GraphStateAnnotation) => {
         ? summaryRes.content
         : String(summaryRes.content);
 
+    logger.info("agent-graph: executeNode completed", {
+      rowsCount: rows.length,
+    });
     return { queryResult: rows, output: summary };
   } catch (err: any) {
+    logger.error("agent-graph: executeNode error", { err, sql });
     const errMsg = `⚠️ Failed to execute SQL: ${err?.message ?? String(err)}`;
     return { output: `${state.output}\n\n${errMsg}` };
   }
@@ -349,9 +392,14 @@ const fallbackNode = async (state: GraphStateAnnotation) => {
 
   // If classifier saw a DB-like intent but low confidence, give a slightly different hint
   if (intent) {
+    logger.info(
+      "agent-graph: fallbackNode - low confidence or unknown intent",
+      { intent }
+    );
     return { output: base + help };
   }
 
+  logger.info("agent-graph: fallbackNode - not a db question");
   return { output: base };
 };
 

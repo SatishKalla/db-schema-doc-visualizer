@@ -1,4 +1,5 @@
 import knex, { Knex } from "knex";
+import logger from "./logger";
 
 export interface DbConfig {
   client: string;
@@ -15,6 +16,9 @@ export interface DbConfig {
 let db: Knex | null = null;
 
 export function initializeDb(config: DbConfig) {
+  logger.info("initializeDb: creating DB connection", {
+    client: config.client,
+  });
   db = knex({
     client: config.client,
     connection: { ...config.connection, ssl: { rejectUnauthorized: false } },
@@ -25,12 +29,16 @@ export function initializeDb(config: DbConfig) {
 
 export function getDbConnection(database: string): Knex {
   if (!db) {
+    logger.error("getDbConnection: no global DB connection");
     throw new Error(
       "Database connection expired. Please connect to the database."
     );
   }
 
   if (db.client.config.client === "pg" && database) {
+    logger.info("getDbConnection: creating pg connection for database", {
+      database,
+    });
     return knex({
       client: "pg",
       connection: {

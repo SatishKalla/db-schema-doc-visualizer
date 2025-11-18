@@ -1,21 +1,22 @@
-import express from "express";
-import bodyParser from "body-parser";
-import cors from "cors";
-import routes from "./routes/index";
-import { PORT_BACKEND, FE_URL } from "./config";
+import dotenv from "dotenv";
+import app from "./app";
+import logger from "./utils/logger";
 
-const app = express();
-app.use(cors({ origin: FE_URL }));
-app.use(bodyParser.json({ limit: "1mb" }));
+dotenv.config();
 
-async function main() {
-  app.use("/api", routes);
-  app.listen(PORT_BACKEND, () =>
-    console.log(`Server listening on port ${PORT_BACKEND}`)
-  );
-}
+const PORT = Number(process.env.PORT ?? 3000);
 
-main().catch((err) => {
-  console.error(err);
+const server = app.listen(PORT, () => {
+  logger.info(`Server listening on port ${PORT}`);
+});
+
+process.on("unhandledRejection", (reason) => {
+  logger.error("Unhandled Rejection", { reason });
+});
+
+process.on("uncaughtException", (err) => {
+  logger.error("Uncaught Exception", err as Error);
   process.exit(1);
 });
+
+export default server;
