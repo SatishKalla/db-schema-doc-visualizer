@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Table,
   Button,
@@ -58,25 +58,29 @@ const Users: React.FC = () => {
     });
   };
 
+  const fetchUsers = useCallback(
+    async (status: StatusFilter) => {
+      console.log("Fetching users with status:", status);
+      setLoading(true);
+      try {
+        const data = await getUsersByStatus(status);
+        setUsers(data);
+      } catch (error) {
+        messageApi.open({
+          type: "error",
+          content: (error as Error).message || "Failed to fetch users",
+        });
+      } finally {
+        setLoading(false);
+      }
+    },
+    [messageApi]
+  );
+
   // Fetch users on component mount and when status filter changes
   useEffect(() => {
     fetchUsers(selectedStatus);
-  }, [selectedStatus]);
-
-  const fetchUsers = async (status: StatusFilter) => {
-    setLoading(true);
-    try {
-      const data = await getUsersByStatus(status);
-      setUsers(data);
-    } catch (error) {
-      messageApi.open({
-        type: "error",
-        content: (error as Error).message || "Failed to fetch users",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [selectedStatus, fetchUsers]);
 
   const handleStatusChange = (value: StatusFilter) => {
     setSelectedStatus(value);
@@ -104,6 +108,7 @@ const Users: React.FC = () => {
         content: "User approved",
       });
       openNotification(password);
+      fetchUsers(selectedStatus);
     } catch (error) {
       messageApi.open({
         type: "error",
@@ -132,6 +137,7 @@ const Users: React.FC = () => {
         type: "info",
         content: "User rejected",
       });
+      fetchUsers(selectedStatus);
     } catch (error) {
       messageApi.open({
         type: "error",
@@ -153,6 +159,7 @@ const Users: React.FC = () => {
         type: "warning",
         content: "User deleted",
       });
+      fetchUsers(selectedStatus);
     } catch (error) {
       messageApi.open({
         type: "error",

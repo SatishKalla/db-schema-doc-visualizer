@@ -14,7 +14,7 @@ async function checkAIConnection() {
     return response.content;
   } catch (error) {
     logger.error("checkAIConnection: error", { error });
-    throw new Error(`AI connection check failed: ${JSON.stringify(error)}`);
+    throw error;
   }
 }
 
@@ -28,7 +28,7 @@ async function runAgentFlow(question: string, database: string) {
     return response;
   } catch (error) {
     logger.error("runAgentFlow: error", { error, question, database });
-    throw new Error(`Agent flow execution failed: ${JSON.stringify(error)}`);
+    throw error;
   }
 }
 

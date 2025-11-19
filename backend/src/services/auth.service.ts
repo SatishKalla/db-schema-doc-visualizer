@@ -23,7 +23,7 @@ async function authenticateUser(email: string, password: string) {
     return { ...data, user: userData };
   } catch (error) {
     logger.error("authenticateUser: error", { error });
-    throw new Error(`User authentication failed: ${JSON.stringify(error)}`);
+    throw error;
   }
 }
 
@@ -35,7 +35,7 @@ async function logoutUser() {
     logger.info("logoutUser: user logged out successfully");
   } catch (error) {
     logger.error("logoutUser: error", { error });
-    throw new Error(`User logout failed: ${JSON.stringify(error)}`);
+    throw error;
   }
 }
 

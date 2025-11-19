@@ -10,23 +10,22 @@ export async function loginUser(payload: LoginRequest): Promise<AuthResponse> {
     body: JSON.stringify(payload),
   });
 
+  const { response, error, message } = await res.json();
   if (!res.ok) {
-    const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err?.message || "Login failed");
+    throw new Error(error?.message || "Login failed");
   }
 
-  const data = await res.json();
-  return data as AuthResponse;
+  return { response, message } as AuthResponse;
 }
 
 // Optional: notify server to invalidate token
-export async function logoutUser(token?: string): Promise<void> {
+export async function logoutUser(): Promise<void> {
   try {
     await fetch(`${API_BASE}/auth/logout`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        Authorization: `Bearer ${localStorage.getItem("authToken") || ""}`,
       },
     });
   } catch {

@@ -5,7 +5,7 @@ export default function errorHandler(
   err: any,
   req: Request,
   res: Response,
-  _next: NextFunction
+  _next?: NextFunction
 ) {
   const status = err?.statusCode ?? 500;
   const message = err?.message ?? "Internal Server Error";

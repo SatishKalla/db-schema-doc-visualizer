@@ -29,7 +29,7 @@ async function saveAccessRequest(full_name: string, email: string) {
         error,
       })}`
     );
-    throw new Error(`Failed to save access request: ${JSON.stringify(error)}`);
+    throw error;
   }
 }
 
@@ -51,7 +51,7 @@ async function getRequests(status: string) {
     return data;
   } catch (error) {
     logger.error(`getRequests: error - ${JSON.stringify({ error })}`);
-    throw new Error(`Get requests failed: ${JSON.stringify(error)}`);
+    throw error;
   }
 }
 
@@ -154,7 +154,7 @@ async function approveOrRejectRequest(
         reviewed_by,
       })}`
     );
-    throw new Error(`approveOrRejectRequest: error ${JSON.stringify(error)}`);
+    throw error;
   }
 }
 
@@ -194,7 +194,7 @@ async function deleteUser(id: string) {
     logger.error(
       `deleteUser: error deleting user - ${JSON.stringify({ error, id })}`
     );
-    throw new Error(`Failed to delete user: ${JSON.stringify(error)}`);
+    throw error;
   }
 }
 

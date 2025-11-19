@@ -13,15 +13,14 @@ export async function requestAccess(
     body: JSON.stringify(payload),
   });
 
+  const data = await res.json();
+  const { error } = data;
   if (!res.ok) {
-    // Try to read a structured error message from the server
-    const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err?.message || "Request failed");
+    throw new Error(error?.message || "Request failed");
   }
 
   // Return the parsed response if any
   try {
-    const data = await res.json();
     return data;
   } catch {
     return;

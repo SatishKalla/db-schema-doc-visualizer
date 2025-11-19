@@ -64,6 +64,7 @@ export const AuthProvider: React.FC<{
           },
         })
       );
+      localStorage.setItem("authToken", session.access_token);
     } finally {
       setLoading(false);
     }
@@ -72,13 +73,14 @@ export const AuthProvider: React.FC<{
   const logout = async () => {
     setLoading(true);
     try {
-      await logoutUser(accessToken || undefined);
+      await logoutUser();
     } finally {
       setUser(null);
       setAccessToken(null);
       setRefreshToken(null);
       setExpiresAt(null);
       localStorage.removeItem("auth");
+      localStorage.removeItem("authToken");
       setLoading(false);
     }
   };
