@@ -4,6 +4,7 @@ import logger from "./logger";
 export interface DbConfig {
   client: string;
   connection: {
+    name: string;
     host: string;
     port: number;
     user: string;
@@ -11,20 +12,26 @@ export interface DbConfig {
     database?: string;
   };
   pool: { min: number; max: number };
+  restrictConnection?: string;
 }
 
 let db: Knex | null = null;
 
 export function initializeDb(config: DbConfig) {
-  logger.info("initializeDb: creating DB connection", {
-    client: config.client,
-  });
-  db = knex({
-    client: config.client,
-    connection: { ...config.connection, ssl: { rejectUnauthorized: false } },
-    pool: { min: 0, max: 5 },
-  });
-  return db;
+  try {
+    logger.info("initializeDb: creating DB connection", {
+      client: config.client,
+    });
+    db = knex({
+      client: config.client,
+      connection: { ...config.connection, ssl: { rejectUnauthorized: false } },
+      pool: { min: 0, max: 5 },
+    });
+    return db;
+  } catch (error) {
+    logger.error(`initializeDb: error ${JSON.stringify(error)}`);
+    throw error;
+  }
 }
 
 export function getDbConnection(database: string): Knex {

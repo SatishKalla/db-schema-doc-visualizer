@@ -1,8 +1,22 @@
+import { Request, Response, NextFunction } from "express";
+import { User } from "@supabase/supabase-js";
 import { supabase } from "../clients/supabase-client";
 import logger from "../utils/logger";
 import errorHandler from "./error-handler";
 
-export const requireAuth = async (req, res, next) => {
+declare global {
+  namespace Express {
+    interface Request {
+      user?: User;
+    }
+  }
+}
+
+export const requireAuth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) throw new Error("No token provided");

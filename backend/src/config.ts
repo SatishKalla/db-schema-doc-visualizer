@@ -14,9 +14,11 @@ const config = {
   feUrl: process.env.FE_URL ?? "http://localhost:5173",
   supabaseUrl:
     process.env.SUPABASE_URL ?? "https://ngwdbdiwcmwgvfvaptti.supabase.co",
-  SUPABASE_SERVICE_ROLE_KEY:
+  supabaseServiceRoleKey:
     process.env.SUPABASE_SERVICE_ROLE_KEY ??
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+  encryptionKey:
+    process.env.ENCRYPTION_KEY ?? "default-key-change-in-production",
   nodeEnv: process.env.NODE_ENV ?? "development",
   logLevel: process.env.LOG_LEVEL ?? "info",
 };
@@ -34,5 +36,6 @@ export const MODEL = config.model;
 export const EMB_MODEL = config.embModel;
 export const FE_URL = config.feUrl;
 export const SUPABASE_URL = config.supabaseUrl;
-export const SUPABASE_SERVICE_ROLE_KEY = config.SUPABASE_SERVICE_ROLE_KEY;
+export const SUPABASE_SERVICE_ROLE_KEY = config.supabaseServiceRoleKey;
+export const ENCRYPTION_KEY = config.encryptionKey;
 export const NODE_ENV = config.nodeEnv;
