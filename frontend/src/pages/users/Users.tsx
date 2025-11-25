@@ -60,7 +60,6 @@ const Users: React.FC = () => {
 
   const fetchUsers = useCallback(
     async (status: StatusFilter) => {
-      console.log("Fetching users with status:", status);
       setLoading(true);
       try {
         const data = await getUsersByStatus(status);
