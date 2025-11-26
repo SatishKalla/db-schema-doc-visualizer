@@ -3,7 +3,14 @@
 }
 
 .layout {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.inner-layout {
+  flex: 1;
+  display: flex;
 }
 
 .main-content {

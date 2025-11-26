@@ -11,11 +11,13 @@
   },
   "dependencies": {
     "antd": "^5.27.0",
+    "chart.js": "^4.5.1",
     "mermaid": "^11.9.0",
-  "react-router-dom": "^6.11.2",
     "react": "^19.1.1",
+    "react-chartjs-2": "^5.3.1",
     "react-dom": "^19.1.1",
-    "react-markdown": "^10.1.0"
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^6.11.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",

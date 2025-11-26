@@ -8,6 +8,10 @@
   flex-direction: column;
   justify-content: space-between;
   overflow: hidden;
+
+  .ant-card-body {
+    padding: 20px;
+  }
 }
 
 .db-title {

@@ -238,8 +238,8 @@ const Connections: React.FC = () => {
                       Type: <strong>{connection.db_type}</strong>
                     </Text>
                     <Text type="secondary" className="db-last">
-                      Recent Database:
-                      <strong>{connection.recentDatabase || "Nill"}</strong>
+                      Recent Database:{" "}
+                      <strong>{connection.databases?.name || "Nill"}</strong>
                     </Text>
                     <Text type="secondary" className="db-last">
                       Last connected:{" "}

@@ -3,7 +3,6 @@ import { Menu } from "antd";
 import {
   LinkOutlined,
   DatabaseOutlined,
-  MessageOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -19,7 +18,6 @@ const Sidebar: React.FC<SidebarProps> = ({ userName }) => {
   const items = [
     { label: "Connections", key: "/connections", icon: <LinkOutlined /> },
     { label: "Databases", key: "/databases", icon: <DatabaseOutlined /> },
-    { label: "Chat with Agent", key: "/chat", icon: <MessageOutlined /> },
   ];
 
   if (userName === "Admin") {

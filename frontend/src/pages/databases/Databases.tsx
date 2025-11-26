@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Row,
   Col,
@@ -11,19 +12,27 @@ import {
   Empty,
   Popconfirm,
 } from "antd";
-import { DeleteOutlined, DoubleRightOutlined } from "@ant-design/icons";
+import {
+  DeleteOutlined,
+  BulbOutlined,
+  FundViewOutlined,
+} from "@ant-design/icons";
 import "./Databases.css";
 import { listSelectedDatabases, deleteDatabase } from "../../api/db";
+import { generateInsights, viewInsights } from "../../api/agent";
+import { formatDuration } from "../../utils/util";
+import mermaid from "mermaid";
 
-type Database = {
+export type Database = {
   id: string;
-  connection_id: string;
   name: string;
-  questions: string[];
   connections: {
     id: string;
     name: string;
   };
+  insights_status: string;
+  insights_gen_count: number;
+  insights_gen_time: number;
 };
 
 const { Title, Text } = Typography;
@@ -32,6 +41,9 @@ const Databases: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(false);
   const [databases, setDatabases] = useState<Database[]>([]);
+  const [insights, setInsights] = useState();
+
+  const navigate = useNavigate();
 
   const fetchDatabases = useCallback(async () => {
     try {
@@ -72,9 +84,49 @@ const Databases: React.FC = () => {
     }
   };
 
-  const handleSelectDatabase = useCallback((database: Database) => {
-    console.log("Selected database:", database);
-  }, []);
+  const handleGenerateInsights = async (database: Database) => {
+    try {
+      setLoading(true);
+      const { message } = await generateInsights(database);
+      messageApi.open({
+        type: "success",
+        content: message || "Insights generated successfully",
+      });
+    } catch (err: unknown) {
+      messageApi.open({
+        type: "error",
+        content: (err as Error).message || "Failed to generate insights",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleViewInsights = async (database: Database) => {
+    try {
+      setLoading(true);
+      const { response, message } = await viewInsights(database.id);
+      messageApi.open({
+        type: "success",
+        content: message || "Viewing insights",
+      });
+
+      const insights = response.insights_data;
+
+      const { svg } = await mermaid.render("erDiagram", insights.mermaid);
+      const updatedInsights = { ...insights, mermaid: svg };
+      const newResponse = { ...response, insights_data: updatedInsights };
+      setInsights({ ...response, insights_data: newResponse });
+      navigate("/insights", { state: { insights: newResponse } });
+    } catch (err: unknown) {
+      messageApi.open({
+        type: "error",
+        content: (err as Error).message || "Failed to view insights",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -106,25 +158,27 @@ const Databases: React.FC = () => {
                       {database.name}
                     </Title>
                     <Text type="secondary" className="db-last">
-                      Connection Name:
-                      <strong>{database.connections.name}</strong>
+                      Connection: <strong>{database.connections.name}</strong>
                     </Text>
-                    <Title level={5} className="db-title">
-                      Last 3 questions
-                    </Title>
-                    {database.questions.length === 0 && (
-                      <Text type="secondary" className="db-last">
-                        No Questions Available
-                      </Text>
-                    )}
-                    {database.questions.length > 0 &&
-                      database.questions.map((question, index) => (
-                        <Text key={index} type="secondary" className="db-last">
-                          - {question}
-                        </Text>
-                      ))}
+                    <Text type="secondary" className="db-last">
+                      Insights Status:{" "}
+                      <strong>
+                        {database.insights_status || "In Progress"}
+                      </strong>
+                    </Text>
+                    <Text type="secondary" className="db-last">
+                      Insights Generated Count:{" "}
+                      <strong>{database.insights_gen_count || "Nill"}</strong>
+                    </Text>
+                    <Text type="secondary" className="db-last">
+                      Prev. Insights Generation Time:{" "}
+                      <strong>
+                        {(database.insights_gen_time &&
+                          formatDuration(database.insights_gen_time)) ||
+                          "Nill"}
+                      </strong>
+                    </Text>
                   </div>
-
                   <div className="db-actions">
                     <Tooltip title="Remove Database">
                       <Popconfirm
@@ -142,13 +196,22 @@ const Databases: React.FC = () => {
                         />
                       </Popconfirm>
                     </Tooltip>
-                    <Tooltip title="Select Database">
+                    <Tooltip title="Generate Insights">
                       <Button
                         type="primary"
-                        onClick={() => handleSelectDatabase(database)}
-                        icon={<DoubleRightOutlined />}
+                        onClick={() => handleGenerateInsights(database)}
+                        icon={<BulbOutlined />}
                       />
                     </Tooltip>
+                    {database.insights_gen_count && (
+                      <Tooltip title="View Insights">
+                        <Button
+                          type="primary"
+                          onClick={() => handleViewInsights(database)}
+                          icon={<FundViewOutlined />}
+                        />
+                      </Tooltip>
+                    )}
                   </div>
                 </Card>
               </Col>

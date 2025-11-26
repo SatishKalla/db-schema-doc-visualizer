@@ -25,12 +25,16 @@ export const fetchConnections = async () => {
     db_user: conn.db_user,
     db_password: conn.db_password,
     user_id: conn.user_id,
-    recentDatabase: "",
-    lastConnected: conn.updated_at
-      ? new Date(conn.updated_at).toLocaleString()
+    recentDatabase: conn.recent_database_id,
+    lastConnected: conn.last_connected_at
+      ? new Date(conn.last_connected_at).toLocaleString()
       : "",
     created_at: conn.created_at,
     updated_at: conn.updated_at,
+    databases: {
+      name: conn.databases?.name || "",
+      id: conn.databases?.id || "",
+    },
   }));
 
   return mappedConnections;

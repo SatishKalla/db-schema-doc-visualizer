@@ -11,6 +11,10 @@ export interface Connection {
   lastConnected: string;
   created_at?: string;
   updated_at?: string;
+  databases: {
+    name: string;
+    id: string;
+  };
 }
 
 export interface ConnectionPayload {

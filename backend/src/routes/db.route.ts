@@ -8,7 +8,6 @@ import {
   createDatabaseController,
   listSelectedDatabaseController,
   deleteDatabaseController,
-  generateSchemaDocController,
 } from "../controllers/db.controller";
 import { requireAuth } from "../middlewares/auth";
 
@@ -30,10 +29,5 @@ router.post("/list-databases", requireAuth, listDatabasesController);
 router.post("/database", requireAuth, createDatabaseController);
 router.get("/database", requireAuth, listSelectedDatabaseController);
 router.delete("/database/:databaseId", requireAuth, deleteDatabaseController);
-router.get(
-  "/generate-schema-doc/:database",
-  requireAuth,
-  generateSchemaDocController
-);
 
 export default router;

@@ -1,8 +1,13 @@
 import { Request, Response } from "express";
-import { checkAIConnection, runAgentFlow } from "../services/agent.service";
+import {
+  checkAIConnection,
+  generateInsights,
+  viewInsights,
+  runAgentFlow,
+} from "../services/agent.service";
 import errorHandler from "../middlewares/error-handler";
 
-export async function checkAIConnectionController(req: Request, res: Response) {
+async function checkAIConnectionController(req: Request, res: Response) {
   try {
     const response = await checkAIConnection();
     res.json(response);
@@ -11,7 +16,42 @@ export async function checkAIConnectionController(req: Request, res: Response) {
   }
 }
 
-export async function askAgentController(req: Request, res: Response) {
+async function generateInsightsController(req: Request, res: Response) {
+  const { body, user } = req;
+  const { databaseId, databaseName } = body;
+
+  if (!databaseId || !databaseName)
+    return res.status(400).json({ error: "Invalid request body" });
+
+  if (!user || !user.id)
+    return res.status(400).json({ error: "User not found" });
+
+  try {
+    const response = await generateInsights(databaseId, databaseName, user.id);
+    res.json({ message: "Insights generated successfully!", response });
+  } catch (error) {
+    return errorHandler(error, req, res);
+  }
+}
+
+async function viewInsightsController(req: Request, res: Response) {
+  const { user } = req;
+  const { databaseId } = req.params;
+  if (!databaseId)
+    return res.status(400).json({ error: "Invalid request body" });
+
+  if (!user || !user.id)
+    return res.status(400).json({ error: "User not found" });
+
+  try {
+    const response = await viewInsights(databaseId, user.id);
+    res.json({ message: "Insights retrieved successfully!", response });
+  } catch (error) {
+    return errorHandler(error, req, res);
+  }
+}
+
+async function askAgentController(req: Request, res: Response) {
   const { question, database } = req.body;
   if (!question || !database)
     return res.status(400).json({ error: "Invalid request body" });
@@ -24,4 +64,9 @@ export async function askAgentController(req: Request, res: Response) {
   }
 }
 
-export default { askAgentController };
+export {
+  checkAIConnectionController,
+  generateInsightsController,
+  viewInsightsController,
+  askAgentController,
+};

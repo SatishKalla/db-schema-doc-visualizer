@@ -5,6 +5,7 @@ import Connections from "../pages/connections/Connections";
 import ProtectedRoute from "./ProtectedRoute";
 import Databases from "../pages/databases/Databases";
 import Users from "../pages/users/Users";
+import Insights from "../pages/insights/Insights";
 
 const AppRoutes: React.FC = () => (
   <Routes>
@@ -15,6 +16,7 @@ const AppRoutes: React.FC = () => (
       <Route path="/" element={<Connections />} />
       <Route path="/connections" element={<Connections />} />
       <Route path="/databases" element={<Databases />} />
+      <Route path="/insights" element={<Insights />} />
       <Route path="/users" element={<Users />} />
     </Route>
 

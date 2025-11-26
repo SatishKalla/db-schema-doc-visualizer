@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import {
   listDatabases,
-  generateDiagramAndDocs,
   createConnection,
   updateConnection,
   listConnections,
@@ -155,21 +154,6 @@ async function deleteDatabaseController(req: Request, res: Response) {
   }
 }
 
-async function generateSchemaDocController(req: Request, res: Response) {
-  const { database } = req.params;
-  if (!database) return res.status(400).json({ error: "Invalid request body" });
-
-  try {
-    const parsed = await generateDiagramAndDocs(database);
-    res.json({
-      message: "Schema documentation generated successfully!",
-      data: parsed,
-    });
-  } catch (error) {
-    return errorHandler(error, req, res);
-  }
-}
-
 export {
   createConnectionController,
   updateConnectionController,
@@ -179,5 +163,4 @@ export {
   createDatabaseController,
   listSelectedDatabaseController,
   deleteDatabaseController,
-  generateSchemaDocController,
 };
