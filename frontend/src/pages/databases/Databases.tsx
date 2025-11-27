@@ -162,9 +162,7 @@ const Databases: React.FC = () => {
                     </Text>
                     <Text type="secondary" className="db-last">
                       Insights Status:{" "}
-                      <strong>
-                        {database.insights_status || "In Progress"}
-                      </strong>
+                      <strong>{database.insights_status || "Nill"}</strong>
                     </Text>
                     <Text type="secondary" className="db-last">
                       Insights Generated Count:{" "}

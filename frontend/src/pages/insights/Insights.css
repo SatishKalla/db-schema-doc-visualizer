@@ -2,6 +2,89 @@
   margin-bottom: 16px;
 }
 
+.scrollable-box {
+  width: 100%;
+  max-height: 70vh;
+  overflow: auto;
+  border: 1px solid #d9d9d9;
+  padding: 8px;
+}
+
+.active-metrics-insights {
+  margin-bottom: 24px;
+
+  .column {
+    margin-bottom: 8px;
+  }
+
+  .metric-card {
+    text-align: center;
+
+    .ant-card-body {
+      padding: 20px;
+    }
+
+    .metric-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .metric-description {
+      font-size: 14px;
+      color: #666;
+    }
+  }
+}
+
+.charts-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.chart-item {
+  flex: 1 1 100%;
+  min-width: 100px;
+  max-width: 300px;
+}
+
+.insights-data {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  .ant-card-body {
+    padding: 20px;
+  }
+}
+
+.insights-data > * {
+  flex: 1 1 calc(50% - 8px);
+  min-width: 300px;
+}
+
+.text-metric-insights {
+  margin-bottom: 24px;
+  .ant-card-body {
+    padding: 20px;
+  }
+}
+
+.categorical-insights {
+  .ant-card-body {
+    padding: 20px;
+  }
+  margin-bottom: 24px;
+  .title {
+    font-size: x-large;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+}
+
 .diagram-controls {
   position: absolute;
   top: 8px;
@@ -17,18 +100,11 @@
   transition: transform 0.18s ease;
   transform-origin: 0 0;
   width: 100%;
+  overflow-x: auto;
 }
 
 .diagram-content.zoomed {
   transform: scale(1.35);
-}
-
-.scrollable-box {
-  min-width: 800px; /* Horizontal scroll */
-  height: 545px; /* Vertical scroll */
-  overflow: auto;
-  border: 1px dashed #ddd;
-  padding: 8px;
 }
 
 .tab-content {
@@ -41,26 +117,86 @@
   right: 55px;
 }
 
-.charts-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 24px;
+/* Responsive styles */
+@media (max-width: 768px) {
+  .scrollable-box {
+    max-height: 80vh;
+    padding: 4px;
+  }
+
+  .active-metrics-insights .metric-card .ant-card-body {
+    padding: 16px;
+  }
+
+  .active-metrics-insights .metric-card .metric-title {
+    font-size: 16px;
+  }
+
+  .charts-container {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .chart-item {
+    min-width: 100px;
+    max-width: 300px;
+  }
+
+  .insights-data > * {
+    flex: 1 1 100%;
+    min-width: 250px;
+  }
+
+  .insights-data .ant-card-body,
+  .text-metric-insights .ant-card-body,
+  .categorical-insights .ant-card-body {
+    padding: 16px;
+  }
+
+  .categorical-insights .title {
+    font-size: large;
+  }
+
+  .diagram-controls {
+    position: static;
+    margin-bottom: 10px;
+    justify-content: center;
+  }
+
+  .diagram-content.zoomed {
+    transform: scale(1.1);
+  }
+
+  .ask-button {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    top: auto;
+    z-index: 1000;
+  }
 }
 
-.chart-item {
-  flex: 1 1 45%;
-  min-width: 250px;
-  max-width: 350px;
-}
+@media (max-width: 576px) {
+  .dashboard-header {
+    margin-bottom: 8px;
+  }
 
-.tables-container {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
+  .active-metrics-insights {
+    margin-bottom: 16px;
+  }
 
-.table-item h3 {
-  margin-bottom: 8px;
-  color: #1890ff;
+  .charts-container,
+  .insights-data,
+  .text-metric-insights,
+  .categorical-insights {
+    margin-bottom: 16px;
+  }
+
+  .insights-data > * {
+    min-width: 200px;
+  }
+
+  .chart-item {
+    min-width: 100%;
+  }
 }
