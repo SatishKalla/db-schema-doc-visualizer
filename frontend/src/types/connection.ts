@@ -7,8 +7,8 @@ export interface Connection {
   db_user: string;
   db_password: string;
   user_id: string;
-  recentDatabase: string;
-  lastConnected: string;
+  recent_database_id: string;
+  last_connected_at: string;
   created_at?: string;
   updated_at?: string;
   databases: {

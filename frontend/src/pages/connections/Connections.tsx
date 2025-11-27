@@ -243,7 +243,7 @@ const Connections: React.FC = () => {
                     </Text>
                     <Text type="secondary" className="db-last">
                       Last connected:{" "}
-                      <strong>{connection.lastConnected || "Nill"}</strong>
+                      <strong>{connection.last_connected_at || "Nill"}</strong>
                     </Text>
                   </div>
 

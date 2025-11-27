@@ -16,7 +16,7 @@ export const fetchConnections = async () => {
     throw new Error(error?.message || "Failed to fetch connections");
   }
 
-  const mappedConnections: Connection[] = response.map((conn) => ({
+  const mappedConnections: Connection[] = response.map((conn: Connection) => ({
     id: conn.id,
     name: conn.name,
     db_type: conn.db_type,
@@ -25,8 +25,8 @@ export const fetchConnections = async () => {
     db_user: conn.db_user,
     db_password: conn.db_password,
     user_id: conn.user_id,
-    recentDatabase: conn.recent_database_id,
-    lastConnected: conn.last_connected_at
+    recent_database_id: conn.recent_database_id,
+    last_connected_at: conn.last_connected_at
       ? new Date(conn.last_connected_at).toLocaleString()
       : "",
     created_at: conn.created_at,
