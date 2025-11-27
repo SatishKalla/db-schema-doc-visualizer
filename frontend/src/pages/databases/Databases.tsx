@@ -41,8 +41,7 @@ const Databases: React.FC = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const [loading, setLoading] = useState(false);
   const [databases, setDatabases] = useState<Database[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [insights, setInsights] = useState();
+  const [, setInsights] = useState();
 
   const navigate = useNavigate();
 
