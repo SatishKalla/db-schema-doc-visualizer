@@ -47,3 +47,24 @@ export const viewInsights = async (databaseId: string) => {
     message,
   };
 };
+
+export const getChats = async (databaseId: string) => {
+  const res = await fetch(`${API_BASE}/agent/chats/${databaseId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("authToken") || ""}`,
+    },
+  });
+
+  const { response, error, message } = await res.json();
+
+  if (!res.ok) {
+    throw new Error(error?.message || "Failed to get chats");
+  }
+
+  return {
+    response,
+    message,
+  };
+};

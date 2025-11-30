@@ -127,3 +127,29 @@ export const createDatabase = async (connectionId: string, name: string) => {
     message,
   };
 };
+
+export const getDatabasesForConnection = async (connectionId: string) => {
+  const res = await fetch(
+    `${API_BASE}/db/database/connection/${connectionId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("authToken") || ""}`,
+      },
+    }
+  );
+
+  const { response, error, message } = await res.json();
+
+  if (!res.ok) {
+    throw new Error(
+      error?.message || "Failed to fetch databases for connection"
+    );
+  }
+
+  return {
+    response,
+    message,
+  };
+};

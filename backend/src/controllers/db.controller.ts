@@ -8,6 +8,7 @@ import {
   createDatabase,
   listSelectedDatabases,
   deleteDatabase,
+  listDatabasesForConnection,
 } from "../services/db.service";
 import errorHandler from "../middlewares/error-handler";
 
@@ -154,6 +155,29 @@ async function deleteDatabaseController(req: Request, res: Response) {
   }
 }
 
+async function listDatabasesForConnectionController(
+  req: Request,
+  res: Response
+) {
+  const { connectionId } = req.params;
+  const { user } = req;
+  if (!connectionId)
+    return res.status(400).json({ error: "Connection ID required" });
+
+  if (!user || !user.id)
+    return res.status(400).json({ error: "User not found" });
+
+  try {
+    const result = await listDatabasesForConnection(connectionId, user.id);
+    res.json({
+      message: "Databases retrieved successfully!",
+      response: result,
+    });
+  } catch (error) {
+    return errorHandler(error, req, res);
+  }
+}
+
 export {
   createConnectionController,
   updateConnectionController,
@@ -163,4 +187,5 @@ export {
   createDatabaseController,
   listSelectedDatabaseController,
   deleteDatabaseController,
+  listDatabasesForConnectionController,
 };

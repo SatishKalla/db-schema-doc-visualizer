@@ -201,7 +201,6 @@ async function listDatabases(userId: string, config: DbConfig) {
         databases = result[0].map((row: any) => row.Database);
       }
     } catch (error) {
-      console.log(error);
       throw new Error(
         "Database connection failed. Please connect to the database with valid credentials."
       );
@@ -341,6 +340,41 @@ async function deleteDatabase(databaseId: string) {
   }
 }
 
+async function listDatabasesForConnection(
+  connectionId: string,
+  userId: string
+) {
+  try {
+    logger.info(
+      `listDatabasesForConnection: connectionId: ${connectionId}, userId: ${userId}`
+    );
+    const { data, error } = await supabase
+      .from("databases")
+      .select(
+        `
+        id,
+        name,
+        insights_status,
+        insights_gen_count,
+        insights_gen_time,
+        connections:connections!connection_id (
+          id,
+          name
+        )
+      `
+      )
+      .eq("connection_id", connectionId)
+      .eq("user_id", userId);
+
+    if (error) throw new Error(error.message);
+
+    return data;
+  } catch (error) {
+    logger.error(`listDatabasesForConnection: error: ${JSON.stringify(error)}`);
+    throw error;
+  }
+}
+
 export {
   createConnection,
   updateConnection,
@@ -350,4 +384,5 @@ export {
   createDatabase,
   listSelectedDatabases,
   deleteDatabase,
+  listDatabasesForConnection,
 };

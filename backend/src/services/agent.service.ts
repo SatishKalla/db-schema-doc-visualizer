@@ -274,7 +274,15 @@ async function viewInsights(databaseId: string, userId: string) {
 
     const { data: currentDb, error: fetchDbError } = await supabase
       .from("databases")
-      .select("name")
+      .select(
+        `
+        name,
+        connections:connections!connection_id (
+          id,
+          name
+        )
+      `
+      )
       .eq("id", databaseId)
       .single();
 
@@ -286,7 +294,11 @@ async function viewInsights(databaseId: string, userId: string) {
       );
     }
 
-    return { ...data, databaseName: currentDb?.name };
+    return {
+      ...data,
+      databaseName: currentDb?.name,
+      connection: currentDb?.connections,
+    };
   } catch (error) {
     logger.error(`viewInsights: error: ${JSON.stringify(error)}`);
     throw error;

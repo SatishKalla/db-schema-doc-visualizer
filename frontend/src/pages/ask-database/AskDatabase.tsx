@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Input,
   Tooltip,
@@ -18,17 +18,13 @@ import {
 import ReactMarkdown from "react-markdown";
 import "./AskDatabase.css";
 import type { Connection } from "../../types/connection";
+import type { Database } from "../databases/Databases";
+import { fetchConnections } from "../../api/connection";
+import { getDatabasesForConnection } from "../../api/db";
+import { getChats } from "../../api/agent";
 import { useLocation } from "react-router-dom";
 
 const { TextArea } = Input;
-
-// interface AskDatabaseProps {
-//   insights?: {
-//     databaseId: string;
-//     databaseName: string;
-//     insights_data: IInsightsData;
-//   };
-// }
 
 interface ChatMessage {
   role: "user" | "agent";
@@ -45,12 +41,13 @@ const AskDatabase: React.FC = () => {
   const location = useLocation();
   const insights = location.state?.insights;
   const [loading, setLoading] = useState(false);
+  const [connectionsLoading, setConnectionsLoading] = useState(false);
   const [messageApi, contextHolder] = message.useMessage();
   const [connections, setConnections] = useState<Connection[]>([]);
   const [selectedConnection, setSelectedConnection] = useState<
     string | undefined
   >(undefined);
-  const [databases, setDatabases] = useState<any[]>([]);
+  const [databases, setDatabases] = useState<Database[]>([]);
   const [selectedDatabase, setSelectedDatabase] = useState<string | undefined>(
     undefined
   );
@@ -63,8 +60,89 @@ const AskDatabase: React.FC = () => {
   const currentChat = chats.find((chat) => chat.id === currentChatId);
   const messages = currentChat ? currentChat.messages : [];
 
+  const handleConnectionChange = useCallback(
+    async (connectionId: string) => {
+      setSelectedConnection(connectionId);
+      setSelectedDatabase(undefined);
+      setDatabases([]);
+      if (connectionId) {
+        try {
+          setConnectionsLoading(true);
+          const result = await getDatabasesForConnection(connectionId);
+          setDatabases(result.response || []);
+          if (insights?.database_id && !selectedDatabase) {
+            setSelectedDatabase(insights.database_id);
+          }
+        } catch (error) {
+          messageApi.open({
+            type: "error",
+            content: (error as Error).message,
+          });
+        } finally {
+          setConnectionsLoading(false);
+        }
+      }
+    },
+    [insights, messageApi, selectedDatabase]
+  );
+
+  useEffect(() => {
+    const fetchConnectionsData = async () => {
+      setConnectionsLoading(true);
+      try {
+        const result = await fetchConnections();
+        setConnections(result);
+        if (insights?.connection.id && !selectedConnection) {
+          setSelectedConnection(insights.connection.id);
+          handleConnectionChange(insights.connection.id);
+        }
+      } catch (error) {
+        messageApi.open({
+          type: "error",
+          content: (error as Error).message,
+        });
+      } finally {
+        setConnectionsLoading(false);
+      }
+    };
+
+    fetchConnectionsData();
+  }, [insights, messageApi, selectedConnection, handleConnectionChange]);
+
+  // useEffect(() => {
+  //   const fetchChatsData = async () => {
+  //     if (selectedDatabase) {
+  //       try {
+  //         const result = await getChats(selectedDatabase);
+  //         setChats(result.response || []);
+  //         if (result.response && result.response.length > 0) {
+  //           setCurrentChatId(result.response[0].id);
+  //         }
+  //       } catch (error) {
+  //         messageApi.open({
+  //           type: "error",
+  //           content: (error as Error).message,
+  //         });
+  //       }
+  //     } else {
+  //       // Reset to default chat when no database selected
+  //       setChats([{ id: "1", title: "New Chat", messages: [] }]);
+  //       setCurrentChatId("1");
+  //     }
+  //   };
+
+  //   fetchChatsData();
+  // }, [selectedDatabase, messageApi]);
+
   const handleAsk = useCallback(async () => {
     if (!question) return;
+    if (!selectedDatabase || !selectedConnection) {
+      messageApi.open({
+        type: "error",
+        content: "Please select a connection and database first.",
+      });
+      return;
+    }
     setLoading(true);
     const newMessages = [
       ...messages,
@@ -77,20 +155,19 @@ const AskDatabase: React.FC = () => {
     );
 
     try {
-      const database = localStorage.getItem("database") || "";
-
-      if (database.trim() === "") {
-        throw new Error(
-          "No database selected. Please select a database first."
-        );
-      }
-
       const res = await fetch(
         `${import.meta.env.VITE_API_URL}/agent/ask-agent`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question, database }),
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("authToken") || ""}`,
+          },
+          body: JSON.stringify({
+            question,
+            databaseId: selectedDatabase,
+            connectionId: selectedConnection,
+          }),
         }
       );
 
@@ -119,7 +196,14 @@ const AskDatabase: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [question, messages, messageApi, currentChatId]);
+  }, [
+    question,
+    messages,
+    messageApi,
+    currentChatId,
+    selectedDatabase,
+    selectedConnection,
+  ]);
 
   const cancelAsk = useCallback(() => {
     setLoading(false);
@@ -154,29 +238,29 @@ const AskDatabase: React.FC = () => {
       <div className="chat-modal-container">
         <div className="chat-sidebar">
           <div className="chat-sidebar-header">
-            {insights && (
-              <div className="dropdowns">
-                <Select
-                  placeholder="Select Connection"
-                  value={selectedConnection}
-                  onChange={setSelectedConnection}
-                  options={connections.map((c) => ({
-                    label: c.name,
-                    value: c.id,
-                  }))}
-                />
-                <Select
-                  placeholder="Select Database"
-                  value={selectedDatabase}
-                  onChange={setSelectedDatabase}
-                  options={databases.map((d) => ({
-                    label: d.name,
-                    value: d.id,
-                  }))}
-                  disabled={!selectedConnection}
-                />
-              </div>
-            )}
+            <div className="dropdowns">
+              <Select
+                placeholder="Select Connection"
+                value={selectedConnection}
+                onChange={handleConnectionChange}
+                loading={!selectedConnection && connectionsLoading}
+                options={connections.map((c) => ({
+                  label: c.name,
+                  value: c.id,
+                }))}
+              />
+              <Select
+                placeholder="Select Database"
+                value={selectedDatabase}
+                onChange={setSelectedDatabase}
+                loading={!!selectedConnection && connectionsLoading}
+                options={databases.map((d) => ({
+                  label: d.name,
+                  value: d.id,
+                }))}
+                disabled={!selectedConnection}
+              />
+            </div>
             <Button
               type="primary"
               icon={<PlusOutlined />}
