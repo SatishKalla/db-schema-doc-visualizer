@@ -12,17 +12,22 @@ import {
   Progress,
   List,
   Tag,
+  Tooltip,
 } from "antd";
-import { ZoomInOutlined, ZoomOutOutlined } from "@ant-design/icons";
+import {
+  OpenAIOutlined,
+  ZoomInOutlined,
+  ZoomOutOutlined,
+} from "@ant-design/icons";
 import ReactMarkdown from "react-markdown";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   BarElement,
   Title as ChartTitle,
-  Tooltip,
+  Tooltip as ChartTooltip,
   Legend,
   ArcElement,
   PointElement,
@@ -30,7 +35,6 @@ import {
 } from "chart.js";
 import type { TabsProps } from "antd";
 import "./Insights.css";
-import ChatAgentModal from "../../components/modals/chat-agent/ChatAgentModal";
 import { Bar, Doughnut, Line } from "react-chartjs-2";
 
 ChartJS.register(
@@ -38,7 +42,7 @@ ChartJS.register(
   LinearScale,
   BarElement,
   ChartTitle,
-  Tooltip,
+  ChartTooltip,
   Legend,
   ArcElement,
   PointElement,
@@ -47,6 +51,8 @@ ChartJS.register(
 
 interface Props {
   insights?: {
+    databaseId: string;
+    databaseName: string;
     insights_data: IInsightsData;
   };
 }
@@ -112,7 +118,7 @@ interface ITable {
   data: any[];
 }
 
-interface IInsightsData {
+export interface IInsightsData {
   title: string;
   mermaid?: string;
   documentation?: string;
@@ -136,9 +142,11 @@ type Severity = "none" | "Stable" | "low" | "medium" | "high" | "informational";
 
 const Insights: React.FC<Props> = ({ insights: propInsights }) => {
   const location = useLocation();
-  const insights = propInsights || location.state?.insights;
   const [isZoomed, setIsZoomed] = React.useState<boolean>(false);
-  const [open, setOpen] = React.useState<boolean>(false);
+
+  const navigate = useNavigate();
+
+  const insights = propInsights || location.state?.insights;
 
   const {
     title,
@@ -314,12 +322,8 @@ const Insights: React.FC<Props> = ({ insights: propInsights }) => {
     );
   };
 
-  const toggleChat = () => {
-    setOpen(!open);
-  };
-
-  const onAsk = () => {
-    setOpen(true);
+  const handleAskDatabase = () => {
+    navigate("/ask-database", { state: { insights } });
   };
 
   const items: TabsProps["items"] = [
@@ -445,19 +449,23 @@ const Insights: React.FC<Props> = ({ insights: propInsights }) => {
   return (
     <>
       <Row className="dashboard-header" justify="space-between" align="middle">
-        <Col>
+        <Col className="header-title">
           <Title level={3} style={{ margin: 0 }}>
             {title}
           </Title>
         </Col>
+        <Col>
+          {insights && (
+            <Tooltip title="Ask Database">
+              <OpenAIOutlined
+                onClick={handleAskDatabase}
+                style={{ fontSize: "30px" }}
+              />
+            </Tooltip>
+          )}
+        </Col>
       </Row>
       <Tabs defaultActiveKey="1" items={items} />
-      {insights && (
-        <Button type="primary" className="ask-button" onClick={onAsk}>
-          Chat
-        </Button>
-      )}
-      {open && <ChatAgentModal open={open} toggleChat={toggleChat} />}
     </>
   );
 };

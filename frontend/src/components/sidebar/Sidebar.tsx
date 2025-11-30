@@ -4,6 +4,7 @@ import {
   LinkOutlined,
   DatabaseOutlined,
   UserOutlined,
+  OpenAIOutlined,
 } from "@ant-design/icons";
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -18,6 +19,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userName }) => {
   const items = [
     { label: "Connections", key: "/connections", icon: <LinkOutlined /> },
     { label: "Databases", key: "/databases", icon: <DatabaseOutlined /> },
+    { label: "Ask Database", key: "/ask-database", icon: <OpenAIOutlined /> },
   ];
 
   if (userName === "Admin") {
@@ -25,8 +27,7 @@ const Sidebar: React.FC<SidebarProps> = ({ userName }) => {
   }
 
   const selectedKey =
-    items.find((i) => location.pathname.startsWith(i.key))?.key ||
-    "/connections";
+    items.find((i) => location.pathname.startsWith(i.key))?.key || "/insights";
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>

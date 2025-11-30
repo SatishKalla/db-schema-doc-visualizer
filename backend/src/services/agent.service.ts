@@ -272,7 +272,21 @@ async function viewInsights(databaseId: string, userId: string) {
       throw new Error(error.message);
     }
 
-    return data;
+    const { data: currentDb, error: fetchDbError } = await supabase
+      .from("databases")
+      .select("name")
+      .eq("id", databaseId)
+      .single();
+
+    if (fetchDbError) {
+      logger.error(
+        `viewInsights: failed to fetch current database data: ${JSON.stringify(
+          fetchDbError
+        )}`
+      );
+    }
+
+    return { ...data, databaseName: currentDb?.name };
   } catch (error) {
     logger.error(`viewInsights: error: ${JSON.stringify(error)}`);
     throw error;
