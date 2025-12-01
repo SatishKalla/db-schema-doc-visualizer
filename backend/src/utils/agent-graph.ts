@@ -129,6 +129,7 @@ const GraphStateAnnotation = Annotation.Root({
   confidence: Annotation<number>(),
   sql: Annotation<string>(),
   queryResult: Annotation<any>(),
+  databaseId: Annotation<string>(),
   database: Annotation<string>(),
 });
 
@@ -182,7 +183,7 @@ const classifyNode = async (state: GraphStateAnnotation) => {
     // If model is uncertain, fallback to retriever+keyword heuristic
     if (confidence < 0.5) {
       try {
-        const retriever = getRetriever();
+        const retriever = await getRetriever(state.databaseId);
         const docs = await retriever.invoke(userMessage);
         const hasRelevantDocs =
           Array.isArray(docs) &&
@@ -220,7 +221,7 @@ const classifyNode = async (state: GraphStateAnnotation) => {
   } catch (err) {
     // On any error, fallback to retriever+keyword; if that fails, return false
     try {
-      const retriever = getRetriever();
+      const retriever = await getRetriever(state.databaseId);
       const docs = await retriever.invoke(userMessage);
       const hasRelevantDocs =
         Array.isArray(docs) &&
@@ -255,7 +256,7 @@ const retrieveNode = async (state: GraphStateAnnotation) => {
     intent,
     userMessage: (userMessage || "").slice(0, 200),
   });
-  const retriever = getRetriever();
+  const retriever = await getRetriever(state.databaseId);
   const docs = await retriever.invoke(userMessage);
 
   const context =

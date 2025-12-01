@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, response, Response } from "express";
 import {
   checkAIConnection,
   generateInsights,
@@ -52,13 +52,16 @@ async function viewInsightsController(req: Request, res: Response) {
 }
 
 async function askAgentController(req: Request, res: Response) {
-  const { question, database } = req.body;
-  if (!question || !database)
+  const { question, databaseId } = req.body;
+  if (!question || !databaseId)
     return res.status(400).json({ error: "Invalid request body" });
 
   try {
-    const result = await runAgentFlow(question, database);
-    res.json({ message: "Agent flow executed successfully!", data: result });
+    const result = await runAgentFlow(question, databaseId);
+    res.json({
+      message: "Agent flow executed successfully!",
+      response: result,
+    });
   } catch (error) {
     return errorHandler(error, req, res);
   }

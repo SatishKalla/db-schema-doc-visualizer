@@ -1,6 +1,7 @@
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { chatModel } from "../utils/ai-models";
 import agentGraph from "../utils/agent-graph";
+import { createRetriever, updateRetrieverWithQA } from "../utils/retriever";
 import logger from "../utils/logger";
 import { getDbConnection } from "../utils/db-connection";
 import { supabase } from "../clients/supabase-client";
@@ -244,6 +245,7 @@ async function generateInsights(
     }
 
     logger.info(`generateInsights: completed for database ${databaseName}`);
+    await createRetriever(JSON.stringify(data), databaseId);
     return data;
   } catch (error) {
     logger.error(`generateInsights: error: ${JSON.stringify(error)}`);
@@ -305,16 +307,39 @@ async function viewInsights(databaseId: string, userId: string) {
   }
 }
 
-async function runAgentFlow(question: string, database: string) {
+async function runAgentFlow(question: string, databaseId: string) {
   try {
-    logger.info("runAgentFlow: starting", { question, database });
-    const state: any = { input: question, database: database };
+    logger.info("runAgentFlow: starting", { question, databaseId });
+
+    // Fetch database name from id
+    const { data: dbData, error } = await supabase
+      .from("databases")
+      .select("name")
+      .eq("id", databaseId)
+      .single();
+
+    if (error)
+      throw new Error(`Failed to fetch database name: ${error.message}`);
+
+    const databaseName = dbData.name;
+
+    const state: any = {
+      input: question,
+      databaseId: databaseId,
+      database: databaseName,
+    };
 
     const response = await agentGraph.invoke(state);
+
+    // Update retriever with Q&A after successful response
+    if (response.output) {
+      await updateRetrieverWithQA(question, response.output, databaseId);
+    }
+
     logger.info("runAgentFlow: agent flow completed");
     return response;
   } catch (error) {
-    logger.error("runAgentFlow: error", { error, question, database });
+    logger.error("runAgentFlow: error", { error, question, databaseId });
     throw error;
   }
 }

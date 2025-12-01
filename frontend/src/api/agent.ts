@@ -48,6 +48,36 @@ export const viewInsights = async (databaseId: string) => {
   };
 };
 
+export const askAgent = async (
+  question: string,
+  databaseId: string,
+  connectionId: string
+) => {
+  const res = await fetch(`${API_BASE}/agent/ask-agent`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("authToken") || ""}`,
+    },
+    body: JSON.stringify({
+      question,
+      databaseId,
+      connectionId,
+    }),
+  });
+
+  const { response, error, message } = await res.json();
+
+  if (!res.ok) {
+    throw new Error(error?.message || "No response from agent");
+  }
+
+  return {
+    response,
+    message,
+  };
+};
+
 export const getChats = async (databaseId: string) => {
   const res = await fetch(`${API_BASE}/agent/chats/${databaseId}`, {
     method: "GET",

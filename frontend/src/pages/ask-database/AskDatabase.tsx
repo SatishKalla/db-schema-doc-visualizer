@@ -21,8 +21,8 @@ import type { Connection } from "../../types/connection";
 import type { Database } from "../databases/Databases";
 import { fetchConnections } from "../../api/connection";
 import { getDatabasesForConnection } from "../../api/db";
-import { getChats } from "../../api/agent";
 import { useLocation } from "react-router-dom";
+import { askAgent } from "../../api/agent";
 
 const { TextArea } = Input;
 
@@ -109,32 +109,7 @@ const AskDatabase: React.FC = () => {
     fetchConnectionsData();
   }, [insights, messageApi, selectedConnection, handleConnectionChange]);
 
-  // useEffect(() => {
-  //   const fetchChatsData = async () => {
-  //     if (selectedDatabase) {
-  //       try {
-  //         const result = await getChats(selectedDatabase);
-  //         setChats(result.response || []);
-  //         if (result.response && result.response.length > 0) {
-  //           setCurrentChatId(result.response[0].id);
-  //         }
-  //       } catch (error) {
-  //         messageApi.open({
-  //           type: "error",
-  //           content: (error as Error).message,
-  //         });
-  //       }
-  //     } else {
-  //       // Reset to default chat when no database selected
-  //       setChats([{ id: "1", title: "New Chat", messages: [] }]);
-  //       setCurrentChatId("1");
-  //     }
-  //   };
-
-  //   fetchChatsData();
-  // }, [selectedDatabase, messageApi]);
-
-  const handleAsk = useCallback(async () => {
+  const handleAsk = async () => {
     if (!question) return;
     if (!selectedDatabase || !selectedConnection) {
       messageApi.open({
@@ -143,7 +118,6 @@ const AskDatabase: React.FC = () => {
       });
       return;
     }
-    setLoading(true);
     const newMessages = [
       ...messages,
       { role: "user" as const, text: question },
@@ -154,31 +128,18 @@ const AskDatabase: React.FC = () => {
       )
     );
 
+    setLoading(true);
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/agent/ask-agent`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("authToken") || ""}`,
-          },
-          body: JSON.stringify({
-            question,
-            databaseId: selectedDatabase,
-            connectionId: selectedConnection,
-          }),
-        }
+      const { response } = await askAgent(
+        question,
+        selectedDatabase,
+        selectedConnection
       );
 
-      const response = await res.json();
-      if (!response) throw new Error("No response from agent");
-      if (response.error) throw new Error(response.error);
-
-      if (response.data) {
+      if (response) {
         const finalMessages = [
           ...newMessages,
-          { role: "agent" as const, text: response.data.output },
+          { role: "agent" as const, text: response.output },
         ];
         setChats((prev) =>
           prev.map((chat) =>
@@ -196,14 +157,7 @@ const AskDatabase: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [
-    question,
-    messages,
-    messageApi,
-    currentChatId,
-    selectedDatabase,
-    selectedConnection,
-  ]);
+  };
 
   const cancelAsk = useCallback(() => {
     setLoading(false);
@@ -239,6 +193,7 @@ const AskDatabase: React.FC = () => {
         <div className="chat-sidebar">
           <div className="chat-sidebar-header">
             <div className="dropdowns">
+              Connection:{" "}
               <Select
                 placeholder="Select Connection"
                 value={selectedConnection}
@@ -249,6 +204,7 @@ const AskDatabase: React.FC = () => {
                   value: c.id,
                 }))}
               />
+              Database:{" "}
               <Select
                 placeholder="Select Database"
                 value={selectedDatabase}
@@ -266,42 +222,48 @@ const AskDatabase: React.FC = () => {
               icon={<PlusOutlined />}
               onClick={createNewChat}
               block
+              disabled={!selectedConnection || !selectedDatabase}
             >
               New Chat
             </Button>
           </div>
-          <div className="chat-list">
-            <List
-              dataSource={chats}
-              renderItem={(chat) => {
-                const menu = (
-                  <Menu>
-                    <Menu.Item key="delete" onClick={() => deleteChat(chat.id)}>
-                      Delete Chat
-                    </Menu.Item>
-                  </Menu>
-                );
-                return (
-                  <List.Item
-                    className={`chat-list-item ${
-                      chat.id === currentChatId ? "active" : ""
-                    }`}
-                    onClick={() => selectChat(chat.id)}
-                  >
-                    <div className="chat-list-item-content">
-                      <span className="chat-title">{chat.title}</span>
-                      <Dropdown overlay={menu} trigger={["click"]}>
-                        <MoreOutlined
-                          className="chat-menu-icon"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </Dropdown>
-                    </div>
-                  </List.Item>
-                );
-              }}
-            />
-          </div>
+          {selectedConnection && selectedDatabase && (
+            <div className="chat-list">
+              <List
+                dataSource={chats}
+                renderItem={(chat) => {
+                  const menu = (
+                    <Menu>
+                      <Menu.Item
+                        key="delete"
+                        onClick={() => deleteChat(chat.id)}
+                      >
+                        Delete Chat
+                      </Menu.Item>
+                    </Menu>
+                  );
+                  return (
+                    <List.Item
+                      className={`chat-list-item ${
+                        chat.id === currentChatId ? "active" : ""
+                      }`}
+                      onClick={() => selectChat(chat.id)}
+                    >
+                      <div className="chat-list-item-content">
+                        <span className="chat-title">{chat.title}</span>
+                        <Dropdown overlay={menu} trigger={["click"]}>
+                          <MoreOutlined
+                            className="chat-menu-icon"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </Dropdown>
+                      </div>
+                    </List.Item>
+                  );
+                }}
+              />
+            </div>
+          )}
         </div>
         <div className="chat-main">
           <div className="chat-messages-wrap">
@@ -333,7 +295,11 @@ const AskDatabase: React.FC = () => {
                 {!loading && (
                   <SendOutlined
                     onClick={() => void handleAsk()}
-                    className={`chat-send-icon ${question ? "" : "disabled"}`}
+                    className={`chat-send-icon ${
+                      question && selectedConnection && selectedDatabase
+                        ? ""
+                        : "disabled"
+                    }`}
                   />
                 )}
               </Tooltip>
