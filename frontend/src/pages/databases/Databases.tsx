@@ -231,11 +231,25 @@ const Databases: React.FC = () => {
                       </Popconfirm>
                     </Tooltip>
                     <Tooltip title="Generate Insights">
-                      <Button
-                        type="primary"
-                        onClick={() => handleGenerateInsights(database)}
-                        icon={<BulbOutlined />}
-                      />
+                      {database.insights_gen_count && (
+                        <Popconfirm
+                          title="Generate Insights"
+                          description="Are you sure to generate insights again?"
+                          onConfirm={() => handleGenerateInsights(database)}
+                          onCancel={() => {}}
+                          okText="Yes"
+                          cancelText="No"
+                        >
+                          <Button type="primary" icon={<BulbOutlined />} />
+                        </Popconfirm>
+                      )}
+                      {!database.insights_gen_count && (
+                        <Button
+                          type="primary"
+                          icon={<BulbOutlined />}
+                          onClick={() => handleGenerateInsights(database)}
+                        />
+                      )}
                     </Tooltip>
                     {database.insights_gen_count && (
                       <Tooltip title="View Insights">
