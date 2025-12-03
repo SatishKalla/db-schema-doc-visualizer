@@ -1,3 +1,10 @@
 .access-alert {
   text-align: center;
 }
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .access-alert {
+    padding: 10px;
+  }
+}

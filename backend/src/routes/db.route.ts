@@ -9,11 +9,13 @@ import {
   listSelectedDatabaseController,
   deleteDatabaseController,
   listDatabasesForConnectionController,
+  connectDatabaseController,
 } from "../controllers/db.controller";
 import { requireAuth } from "../middlewares/auth";
 
 const router = express.Router();
 
+router.post("/connection/connect", requireAuth, connectDatabaseController);
 router.post("/connection", requireAuth, createConnectionController);
 router.patch(
   "/connection/:connectionId",

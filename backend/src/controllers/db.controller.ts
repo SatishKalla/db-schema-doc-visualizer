@@ -9,8 +9,27 @@ import {
   listSelectedDatabases,
   deleteDatabase,
   listDatabasesForConnection,
+  connectToDatabase,
 } from "../services/db.service";
 import errorHandler from "../middlewares/error-handler";
+
+async function connectDatabaseController(req: Request, res: Response) {
+  const { body, user } = req;
+  if (!body || !body.name || !body.connectionId)
+    return res.status(400).json({ error: "Invalid request body" });
+
+  if (!user || !user.id)
+    return res.status(400).json({ error: "User not found" });
+
+  try {
+    await connectToDatabase(body.name, body.connectionId);
+    res.json({
+      message: "Connected to database successfully!",
+    });
+  } catch (error) {
+    return errorHandler(error, req, res);
+  }
+}
 
 async function createConnectionController(req: Request, res: Response) {
   const { body, user } = req;
@@ -179,6 +198,7 @@ async function listDatabasesForConnectionController(
 }
 
 export {
+  connectDatabaseController,
   createConnectionController,
   updateConnectionController,
   listConnectionController,

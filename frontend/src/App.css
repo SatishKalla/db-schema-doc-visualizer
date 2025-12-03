@@ -33,12 +33,18 @@
 }
 
 @media (max-width: 768px) {
+  .layout {
+    height: unset;
+  }
   .main-content {
     padding: 16px;
   }
 }
 
 @media (max-width: 520px) {
+  .layout {
+    height: unset;
+  }
   .main-content {
     padding: 12px;
   }

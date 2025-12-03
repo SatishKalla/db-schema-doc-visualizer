@@ -4,7 +4,7 @@
   background: #1e293b;
   color: #f8fafc;
   font-family: "Inter", sans-serif;
-  padding: 0px 5px;
+  padding: 5px 5px;
 }
 
 .logo {
@@ -37,9 +37,61 @@
   color: #f8fafc;
 }
 
+.profile-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .profile-name {
   color: #f8fafc;
-  margin-top: 5px;
   font-weight: 500;
   font-size: 20px;
+  line-height: 1;
+}
+
+.email {
+  color: #f8fafc;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1;
+}
+
+/* Responsive styles */
+@media (max-width: 767px) {
+  .navbar {
+    padding: 12px 10px;
+  }
+
+  .logo-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .navbar-title {
+    font-size: 16px !important;
+    margin: 5px;
+  }
+
+  .profile-name {
+    font-size: 16px;
+  }
+
+  .email {
+    display: none;
+  }
+
+  .profile {
+    gap: 3px;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .navbar-title {
+    font-size: 18px;
+  }
+
+  .profile-name {
+    font-size: 18px;
+  }
 }

@@ -14,6 +14,11 @@
   }
 }
 
+.db-header {
+  display: flex;
+  justify-content: space-between;
+}
+
 .db-title {
   margin: 0 0 6px 0;
 }

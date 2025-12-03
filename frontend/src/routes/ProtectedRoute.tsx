@@ -45,7 +45,11 @@ const ProtectedRoute: React.FC = () => {
     <Layout className="layout">
       {contextHolder}
       <Header style={{ padding: 0 }}>
-        <TopNav userName={user?.name} onLogout={handleLogout} />
+        <TopNav
+          userName={user?.name}
+          email={user?.email}
+          onLogout={handleLogout}
+        />
       </Header>
 
       <Layout className="inner-layout">

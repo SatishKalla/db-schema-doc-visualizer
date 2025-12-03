@@ -7,10 +7,11 @@ const { Title } = Typography;
 
 type TopNavProps = {
   userName?: string;
+  email?: string;
   onLogout?: () => void;
 };
 
-const TopNav: React.FC<TopNavProps> = ({ userName, onLogout }) => {
+const TopNav: React.FC<TopNavProps> = ({ userName, email, onLogout }) => {
   const handleLogout = () => {
     if (onLogout) onLogout();
     else console.log("Logout clicked (no onLogout handler provided)");
@@ -37,7 +38,10 @@ const TopNav: React.FC<TopNavProps> = ({ userName, onLogout }) => {
         <Dropdown overlay={menu} placement="bottomLeft" trigger={["click"]}>
           <div className="profile" role="button" aria-label="User menu">
             <Avatar size="large" icon={<UserOutlined />} />
-            <span className="profile-name">{userName || "Admin"}</span>
+            <div className="profile-details">
+              <span className="profile-name">{userName || "Admin"}</span>
+              <span className="email">{email}</span>
+            </div>
           </div>
         </Dropdown>
       </div>

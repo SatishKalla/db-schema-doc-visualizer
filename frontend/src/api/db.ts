@@ -2,6 +2,27 @@ import type { ConnectionPayload } from "../types/connection";
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
+export const connectToDatabase = async (name: string, connectionId: string) => {
+  const res = await fetch(`${API_BASE}/db/connection/connect`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${localStorage.getItem("authToken") || ""}`,
+    },
+    body: JSON.stringify({ name, connectionId }),
+  });
+
+  const { error, message } = await res.json();
+
+  if (!res.ok) {
+    throw new Error(error?.message || "Failed to connect to database");
+  }
+
+  return {
+    message,
+  };
+};
+
 export const listDatabases = async (payload: ConnectionPayload) => {
   const res = await fetch(`${API_BASE}/db/list-databases`, {
     method: "POST",

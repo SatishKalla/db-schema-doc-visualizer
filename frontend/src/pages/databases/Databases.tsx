@@ -16,9 +16,14 @@ import {
   DeleteOutlined,
   BulbOutlined,
   FundViewOutlined,
+  DatabaseOutlined,
 } from "@ant-design/icons";
 import "./Databases.css";
-import { listSelectedDatabases, deleteDatabase } from "../../api/db";
+import {
+  listSelectedDatabases,
+  deleteDatabase,
+  connectToDatabase,
+} from "../../api/db";
 import { generateInsights, viewInsights } from "../../api/agent";
 import { formatDuration } from "../../utils/util";
 import mermaid from "mermaid";
@@ -129,6 +134,27 @@ const Databases: React.FC = () => {
     }
   };
 
+  const handleConnectDatabase = async (database: Database) => {
+    try {
+      setLoading(true);
+      const { message } = await connectToDatabase(
+        database.name,
+        database.connections.id
+      );
+      messageApi.open({
+        type: "success",
+        content: message || "Connected to database successfully",
+      });
+    } catch (err: unknown) {
+      messageApi.open({
+        type: "error",
+        content: (err as Error).message || "Failed to connect to database",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       {contextHolder}
@@ -155,9 +181,18 @@ const Databases: React.FC = () => {
               <Col key={database.id} xs={24} sm={12} md={8} lg={6} xl={6}>
                 <Card className="db-card">
                   <div>
-                    <Title level={4} className="db-title">
-                      {database.name}
-                    </Title>
+                    <div className="db-header">
+                      <Title level={4} className="db-title">
+                        {database.name}
+                      </Title>
+                      <Tooltip title="Connect to Database">
+                        <Button
+                          type="dashed"
+                          icon={<DatabaseOutlined />}
+                          onClick={() => handleConnectDatabase(database)}
+                        />
+                      </Tooltip>
+                    </div>
                     <Text type="secondary" className="db-last">
                       Connection: <strong>{database.connections.name}</strong>
                     </Text>

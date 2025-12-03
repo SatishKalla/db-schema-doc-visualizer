@@ -3,6 +3,42 @@ import logger from "../utils/logger";
 import { supabase } from "../clients/supabase-client";
 import { encryptPassword, decryptPassword } from "../utils/encryption";
 
+async function connectToDatabase(databaseName: string, connectionId: string) {
+  try {
+    logger.info(
+      `connectToDatabase: ${JSON.stringify({ databaseName, connectionId })}`
+    );
+
+    const { data, error } = await supabase
+      .from("connections")
+      .select("*")
+      .eq("id", connectionId)
+      .single();
+
+    if (error) throw new Error(error.message);
+
+    const { name, db_type, host, port, db_user, db_password } = data;
+
+    const db = initializeDb({
+      client: db_type,
+      connection: {
+        name,
+        host,
+        port,
+        user: db_user,
+        password: decryptPassword(db_password),
+        database: databaseName,
+      },
+      pool: { min: 0, max: 5 },
+    });
+
+    return db;
+  } catch (error) {
+    logger.error(`connectToDatabase: error: ${JSON.stringify({ error })}`);
+    throw error;
+  }
+}
+
 async function createConnection(userId: string, config: DbConfig) {
   try {
     logger.info(`createConnection: ${JSON.stringify({ userId, config })}`);
@@ -392,6 +428,7 @@ async function listDatabasesForConnection(
 }
 
 export {
+  connectToDatabase,
   createConnection,
   updateConnection,
   listConnections,

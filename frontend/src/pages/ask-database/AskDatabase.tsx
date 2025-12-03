@@ -9,12 +9,13 @@ import {
   Menu,
   Select,
   Spin,
+  Popconfirm,
 } from "antd";
 import {
   SendOutlined,
   LoadingOutlined,
   PlusOutlined,
-  MoreOutlined,
+  EllipsisOutlined,
   SyncOutlined,
 } from "@ant-design/icons";
 import ReactMarkdown from "react-markdown";
@@ -366,11 +367,17 @@ const AskDatabase: React.FC = () => {
                   renderItem={(chat) => {
                     const menu = (
                       <Menu>
-                        <Menu.Item
-                          key="delete"
-                          onClick={() => deleteChat(chat.id)}
-                        >
-                          Delete Chat
+                        <Menu.Item key="delete">
+                          <Popconfirm
+                            title="Delete the Chat"
+                            description="Are you sure to delete this chat?"
+                            onConfirm={() => deleteChat(chat.id)}
+                            onCancel={() => {}}
+                            okText="Yes"
+                            cancelText="No"
+                          >
+                            Delete Chat
+                          </Popconfirm>
                         </Menu.Item>
                       </Menu>
                     );
@@ -390,7 +397,7 @@ const AskDatabase: React.FC = () => {
                           />
                           <Dropdown overlay={menu} trigger={["click"]}>
                             {!deleteChatLoading && (
-                              <MoreOutlined
+                              <EllipsisOutlined
                                 className="chat-menu-icon"
                                 onClick={(e) => e.stopPropagation()}
                               />

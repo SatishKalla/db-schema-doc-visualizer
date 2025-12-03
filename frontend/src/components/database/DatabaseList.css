@@ -39,3 +39,11 @@
 .custom-radio:active {
   transform: scale(0.97);
 }
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .custom-radio {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+}

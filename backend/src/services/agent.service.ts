@@ -331,6 +331,8 @@ async function runAgentFlow(
 
     const databaseName = dbData.name;
 
+    getDbConnection(databaseName);
+
     const state: any = {
       input: question,
       databaseId: databaseId,
