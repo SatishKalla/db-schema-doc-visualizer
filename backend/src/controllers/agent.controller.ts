@@ -52,12 +52,22 @@ async function viewInsightsController(req: Request, res: Response) {
 }
 
 async function askAgentController(req: Request, res: Response) {
-  const { question, databaseId } = req.body;
+  const { body, user } = req;
+  const { question, databaseId, currentChatId } = body;
+
   if (!question || !databaseId)
     return res.status(400).json({ error: "Invalid request body" });
 
+  if (!user || !user.id)
+    return res.status(400).json({ error: "User not found" });
+
   try {
-    const result = await runAgentFlow(question, databaseId);
+    const result = await runAgentFlow(
+      question,
+      databaseId,
+      user.id,
+      currentChatId
+    );
     res.json({
       message: "Agent flow executed successfully!",
       response: result,

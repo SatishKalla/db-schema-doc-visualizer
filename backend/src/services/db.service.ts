@@ -146,6 +146,18 @@ async function deleteConnection(connectionId: string, userId: string) {
         `Connection details not found for connection id: ${connectionId}`
       );
     }
+
+    const databases = await listDatabasesForConnection(connectionId, userId);
+
+    if (databases && databases.length > 0) {
+      const databaseList = databases.map((d) => d.id);
+      for (const databaseId of databaseList) {
+        await supabase.rpc("drop_vectors_table", {
+          tbl: `vectors_${databaseId}`,
+        });
+      }
+    }
+
     const { data, error } = await supabase
       .from("connections")
       .delete()
@@ -237,6 +249,7 @@ async function createDatabase(
           connection_id: connectionId,
           name,
           user_id: userId,
+          insights_status: "Pending",
         },
       ])
       .select(
@@ -313,6 +326,7 @@ async function listSelectedDatabases(userId: string) {
 async function deleteDatabase(databaseId: string) {
   try {
     logger.info(`deleteDatabase: databaseId: ${databaseId}`);
+
     const { data, error } = await supabase
       .from("databases")
       .delete()
@@ -332,6 +346,8 @@ async function deleteDatabase(databaseId: string) {
       );
 
     if (error) throw new Error(error.message);
+
+    await supabase.rpc("drop_vectors_table", { tbl: `vectors_${databaseId}` });
 
     return data;
   } catch (error) {

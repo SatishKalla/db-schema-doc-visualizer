@@ -6,7 +6,8 @@
 
 .chat-modal-container {
   display: flex;
-  height: calc(100vh - 7rem);
+  height: calc(100vh - 5rem);
+  background: #f8f9fa;
 }
 
 .chat-sidebar {
@@ -14,7 +15,6 @@
   border-right: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
-  background: #f8f9fa;
 }
 
 .chat-sidebar-header {
@@ -94,8 +94,7 @@
 }
 
 .chat-message {
-  max-width: 80%;
-  border-radius: 18px;
+  border-radius: 10px;
   padding: 0px 5px;
   word-wrap: break-word;
   white-space: pre-wrap;
@@ -110,13 +109,18 @@
 
 .chat-message.agent {
   align-self: flex-start;
-  background: #f1f3f4;
   color: #333;
+  font-size: 15px;
 }
 
 .chat-message-content {
   display: flex;
   flex-direction: column;
+}
+
+.chat-message-content p {
+  margin: 0;
+  padding: 4px 0;
 }
 
 .chat-input-area {
@@ -159,6 +163,28 @@
 .chat-send-icon.disabled {
   color: #ccc;
   cursor: not-allowed;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0;
+  }
+  75% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.thinking-text {
+  animation: blink 1.5s infinite ease-in-out;
 }
 
 /* Responsive Design */

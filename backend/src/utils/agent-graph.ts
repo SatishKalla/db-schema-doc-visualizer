@@ -131,6 +131,8 @@ const GraphStateAnnotation = Annotation.Root({
   queryResult: Annotation<any>(),
   databaseId: Annotation<string>(),
   database: Annotation<string>(),
+  title: Annotation<string>(),
+  inputPrompt: Annotation<string>(),
 });
 
 type GraphStateAnnotation = typeof GraphStateAnnotation.State;
@@ -141,20 +143,20 @@ const classifyNode = async (state: GraphStateAnnotation) => {
 
   // Few-shot prompt instructing the model to return strict JSON only.
   const prompt = `You are an assistant that ONLY answers whether a user query is related to database structure, SQL queries, ER diagrams, or performance issues.
-  Return VALID JSON only with keys: isDbQuestion (true|false), intent (short tag), confidence (number between 0 and 1).
+  Return VALID JSON only with keys: title (short text), isDbQuestion (true|false), intent (short tag), confidence (number between 0 and 1).
 
   Examples:
   Q: "List the tables in the database"
-  A: {"isDbQuestion": true, "intent": "list_tables", "confidence": 0.99}
+  A: {"title":"Listing tables", "isDbQuestion": true, "intent": "list_tables", "confidence": 0.99}
 
   Q: "How do I write a join between orders and customers to get the customer name?"
-  A: {"isDbQuestion": true, "intent": "generate_query", "confidence": 0.98}
+  A: {"title":"Joining Orders", "isDbQuestion": true, "intent": "generate_query", "confidence": 0.98}
 
   Q: "My queries are slow after adding new rows; what could be the issue?"
-  A: {"isDbQuestion": true, "intent": "performance_investigation", "confidence": 0.95}
+  A: {"title":"Slow Queries", "isDbQuestion": true, "intent": "performance_investigation", "confidence": 0.95}
 
   Q: "What's the weather today?"
-  A: {"isDbQuestion": false, "intent": "other", "confidence": 0.99}
+  A: {"title":"Weather Details", "isDbQuestion": false, "intent": "other", "confidence": 0.99}
 
   Now classify the following query and return JSON only.
   Q: "${userMessage.replace(/\n/g, " ").replace(/"/g, '\\"')}"`;
@@ -179,6 +181,7 @@ const classifyNode = async (state: GraphStateAnnotation) => {
       typeof parsed.intent === "string" ? parsed.intent : "unknown";
     const confidence =
       typeof parsed.confidence === "number" ? parsed.confidence : 0;
+    const title = typeof parsed.title === "string" ? parsed.title : "New Chat";
 
     // If model is uncertain, fallback to retriever+keyword heuristic
     if (confidence < 0.5) {
@@ -195,7 +198,7 @@ const classifyNode = async (state: GraphStateAnnotation) => {
             "agent-graph: classifyNode fallback -> relevant docs found",
             { intent, confidence }
           );
-          return { isDbQuestion: true, intent, confidence };
+          return { title, isDbQuestion: true, intent, confidence };
         }
 
         const keywordMatch = keyWords.some((keyword) =>
@@ -205,19 +208,20 @@ const classifyNode = async (state: GraphStateAnnotation) => {
           "agent-graph: classifyNode fallback -> keyword heuristic result",
           { keywordMatch, intent, confidence }
         );
-        return { isDbQuestion: keywordMatch, intent, confidence };
+        return { title, isDbQuestion: keywordMatch, intent, confidence };
       } catch (err) {
         logger.error("agent-graph: classifyNode fallback error", { err });
-        return { isDbQuestion: false };
+        return { title, isDbQuestion: false };
       }
     }
 
     logger.info("agent-graph: classifyNode result", {
+      title,
       isDbQuestion,
       intent,
       confidence,
     });
-    return { isDbQuestion, intent, confidence };
+    return { title, isDbQuestion, intent, confidence };
   } catch (err) {
     // On any error, fallback to retriever+keyword; if that fails, return false
     try {
@@ -295,13 +299,13 @@ const retrieveNode = async (state: GraphStateAnnotation) => {
     docsCount: Array.isArray(docs) ? docs.length : 0,
   });
   return {
-    input: `${instruction}\n\nIntent: ${intent}\n\nDatabase documentation and ER diagram info:\n\n${context}\n\nQuestion: ${state.input}`,
+    inputPrompt: `${instruction}\n\nIntent: ${intent}\n\nDatabase documentation and ER diagram info:\n\n${context}\n\nQuestion: ${state.input}`,
   };
 };
 
 // 3. Answer with context
 const agentNode = async (state: GraphStateAnnotation) => {
-  const input = state.input; // retrieveNode already prepared the full prompt
+  const input = state.inputPrompt; // retrieveNode already prepared the full prompt
   logger.info("agent-graph: agentNode invoke", {
     inputPreview: (input || "").slice(0, 200),
   });
@@ -389,7 +393,7 @@ const fallbackNode = async (state: GraphStateAnnotation) => {
   const base = "⚠️ I can only answer selected database-related questions.";
 
   const help =
-    " If your question is about SQL, schema design, ER diagrams, or performance, try rephrasing (e.g., 'create a join query between orders and customers' or 'why are queries on table X slow?').";
+    " If your question is about SQL, schema design, ER diagrams, tables data or performance, try rephrasing (e.g., 'create a join query between orders and customers' or 'why are queries on table X slow?').";
 
   // If classifier saw a DB-like intent but low confidence, give a slightly different hint
   if (intent) {

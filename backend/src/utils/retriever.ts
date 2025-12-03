@@ -6,6 +6,30 @@ import { GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
 import { supabase } from "../clients/supabase-client";
 import logger from "./logger";
 
+class CustomSupabaseVectorStore extends SupabaseVectorStore {
+  async similaritySearchVectorWithScore(
+    query: number[],
+    k: number,
+    filter?: any
+  ) {
+    const matchThreshold = (this.filter as any)?.score_threshold || 0;
+    const filterObj = {
+      ...((this.filter as any)?.filter || {}),
+      match_threshold: matchThreshold,
+    };
+    const { data, error } = await (this as any).client.rpc("match_documents", {
+      filter: filterObj,
+      match_count: k,
+      query_embedding: query,
+    });
+    if (error) throw error;
+    return data.map((row: any) => [
+      new Document({ pageContent: row.content, metadata: row.metadata }),
+      row.similarity,
+    ]);
+  }
+}
+
 const retrieverInstances: Record<
   string,
   ReturnType<typeof SupabaseVectorStore.prototype.asRetriever>
@@ -53,7 +77,7 @@ export const createRetriever = async (data: string, databaseId: string) => {
   });
 
   // 3. Store in Supabase vector store with pgvector
-  const vectorStore = await SupabaseVectorStore.fromDocuments(
+  const vectorStore = await CustomSupabaseVectorStore.fromDocuments(
     docs,
     embeddings,
     {
@@ -61,6 +85,7 @@ export const createRetriever = async (data: string, databaseId: string) => {
       tableName,
     }
   );
+  (vectorStore as any).filter = { filter: { table_name: tableName } };
 
   retrieverInstances[databaseId] = vectorStore.asRetriever({ k: 3 });
   logger.info("retriever: created persistent vector store and retriever", {
@@ -82,13 +107,14 @@ export const getRetriever = async (databaseId: string) => {
       apiKey: GOOGLE_API_KEY,
       model: EMB_MODEL,
     });
-    const vectorStore = await SupabaseVectorStore.fromExistingIndex(
+    const vectorStore = await CustomSupabaseVectorStore.fromExistingIndex(
       embeddings,
       {
         client: supabase,
         tableName,
       }
     );
+    (vectorStore as any).filter = { filter: { table_name: tableName } };
     retrieverInstances[databaseId] = vectorStore.asRetriever({ k: 3 });
   }
   return retrieverInstances[databaseId];
@@ -114,7 +140,7 @@ export const updateRetrieverWithQA = async (
   });
 
   // Append to existing store
-  await SupabaseVectorStore.fromDocuments([doc], embeddings, {
+  await CustomSupabaseVectorStore.fromDocuments([doc], embeddings, {
     client: supabase,
     tableName,
   });

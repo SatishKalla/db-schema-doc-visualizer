@@ -51,7 +51,8 @@ export const viewInsights = async (databaseId: string) => {
 export const askAgent = async (
   question: string,
   databaseId: string,
-  connectionId: string
+  connectionId: string,
+  currentChatId: string | undefined
 ) => {
   const res = await fetch(`${API_BASE}/agent/ask-agent`, {
     method: "POST",
@@ -63,6 +64,7 @@ export const askAgent = async (
       question,
       databaseId,
       connectionId,
+      currentChatId,
     }),
   });
 

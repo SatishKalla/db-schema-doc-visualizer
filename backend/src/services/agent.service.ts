@@ -9,6 +9,8 @@ import {
   INSIGHTS_SYSTEM_PROMPT,
   prepareInsightsUserPrompt,
 } from "../utils/prompts";
+import { ChatWithMessages, saveChatWithMessages } from "./chat.service";
+import { listSelectedDatabases } from "./db.service";
 
 async function checkAIConnection() {
   try {
@@ -227,6 +229,7 @@ async function generateInsights(
     const { data: dbData, error: dbError } = await supabase
       .from("databases")
       .update({
+        insights_status: "Generated",
         insights_gen_count: currentCount + 1, // Increment generation count
         insights_gen_time: generationDuration, // Store duration as string
         user_id: userId,
@@ -246,7 +249,7 @@ async function generateInsights(
 
     logger.info(`generateInsights: completed for database ${databaseName}`);
     await createRetriever(JSON.stringify(data), databaseId);
-    return data;
+    return listSelectedDatabases(userId);
   } catch (error) {
     logger.error(`generateInsights: error: ${JSON.stringify(error)}`);
     throw error;
@@ -307,7 +310,12 @@ async function viewInsights(databaseId: string, userId: string) {
   }
 }
 
-async function runAgentFlow(question: string, databaseId: string) {
+async function runAgentFlow(
+  question: string,
+  databaseId: string,
+  userId: string,
+  currentChatId: string
+) {
   try {
     logger.info("runAgentFlow: starting", { question, databaseId });
 
@@ -330,14 +338,30 @@ async function runAgentFlow(question: string, databaseId: string) {
     };
 
     const response = await agentGraph.invoke(state);
-
+    let chat: ChatWithMessages | null = null;
     // Update retriever with Q&A after successful response
     if (response.output) {
       await updateRetrieverWithQA(question, response.output, databaseId);
+      chat = await saveChatWithMessages(
+        userId,
+        response.title,
+        databaseId,
+        [
+          {
+            role: "user",
+            content: response.input,
+          },
+          {
+            role: "agent",
+            content: response.output,
+          },
+        ],
+        currentChatId
+      );
     }
 
     logger.info("runAgentFlow: agent flow completed");
-    return response;
+    return { chat, ...response };
   } catch (error) {
     logger.error("runAgentFlow: error", { error, question, databaseId });
     throw error;

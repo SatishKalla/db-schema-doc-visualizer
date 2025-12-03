@@ -87,11 +87,12 @@ const Databases: React.FC = () => {
   const handleGenerateInsights = async (database: Database) => {
     try {
       setLoading(true);
-      const { message } = await generateInsights(database);
+      const { response, message } = await generateInsights(database);
       messageApi.open({
         type: "success",
         content: message || "Insights generated successfully",
       });
+      setDatabases(response);
     } catch (err: unknown) {
       messageApi.open({
         type: "error",
